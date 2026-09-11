@@ -9,7 +9,7 @@ def project_summary():
 
 
 def risk_level(open_blockers: int) -> str:
-    if open_blockers >= 4:
+    if open_blockers >= 5:
         return "HIGH"
     if open_blockers >= 2:
         return "MEDIUM"
