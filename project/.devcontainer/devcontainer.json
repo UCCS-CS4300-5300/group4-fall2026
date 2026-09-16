@@ -1,0 +1,1 @@
+{"name":"CS4300 Project Starter","image":"mcr.microsoft.com/devcontainers/python:1-3.12-bookworm","postCreateCommand":"pip install -r requirements.txt && python manage.py migrate","forwardPorts":[8000]}
