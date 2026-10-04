@@ -1,0 +1,278 @@
+<body class="min-h-screen bg-[#F7F7FB] text-ink">
+
+<div class="min-h-screen flex">
+
+    <!-- =========================================================
+         MAIN CONTENT
+    ========================================================== -->
+
+    <main class="flex-1 min-w-0">
+
+        <section
+            class="max-w-[1040px]
+                   mx-auto px-12 py-14"
+        >
+
+            <!-- Heading -->
+
+            <div class="max-w-[760px]">
+
+                <div
+                    class="inline-flex items-center gap-2
+                           rounded-full bg-purple/8
+                           text-purple px-3 py-1.5
+                           text-xs font-bold mb-5"
+                >
+                    STEP 1 OF 4
+                </div>
+
+
+                <h1
+                    class="text-5xl font-bold
+                           tracking-[-.04em]
+                           leading-tight"
+                >
+                    Where would you like to go?
+                </h1>
+
+
+                <p
+                    class="mt-4 text-lg text-slate-500
+                           leading-8"
+                >
+                    Add as many destinations as you'd like.
+                    We'll look for places that work for
+                    everyone in your group.
+                </p>
+
+            </div>
+
+
+            <!-- =================================================
+                 DESTINATION CARD
+            ================================================== -->
+
+            <div
+                class="mt-10 bg-white
+                       rounded-[28px]
+                       shadow-soft
+                       border border-slate-100
+                       p-8"
+            >
+
+                <!-- Input -->
+
+                <label
+                    for="destinationInput"
+                    class="block text-sm
+                           font-semibold
+                           text-slate-700 mb-3"
+                >
+                    Add a destination
+                </label>
+
+
+                <div class="relative">
+
+                    <div
+                        class="flex items-center
+                               border-2 border-slate-200
+                               focus-within:border-purple
+                               rounded-2xl
+                               transition
+                               overflow-hidden
+                               bg-white"
+                    >
+
+                        <span class="pl-5 text-xl">
+                            ⌕
+                        </span>
+
+
+                        <input
+                            id="destinationInput"
+                            autocomplete="off"
+                            type="text"
+                            class="w-full px-4 py-4
+                                   text-base outline-none
+                                   placeholder:text-slate-400"
+                            placeholder="e.g. Denver, Tokyo, New Orleans..."
+                        >
+
+
+                        <button
+                            id="addBtn"
+                            type="button"
+                            class="mr-2 rounded-xl
+                                   bg-purple text-white
+                                   px-5 py-2.5
+                                   font-semibold text-sm
+                                   hover:bg-[#5149e8]
+                                   transition"
+                        >
+                            Add
+                        </button>
+
+                    </div>
+
+
+                    <!-- Autocomplete -->
+
+                    <div
+                        id="suggestions"
+                        class="hidden absolute
+                               left-0 right-0
+                               top-[64px]
+                               bg-white
+                               border border-slate-200
+                               rounded-2xl shadow-xl
+                               z-20 overflow-hidden"
+                    ></div>
+
+                </div>
+
+
+                <!-- Destination heading -->
+
+                <div
+                    class="flex items-center
+                           justify-between
+                           mt-10 mb-4"
+                >
+
+                    <div>
+
+                        <div class="text-sm font-bold">
+                            Your destinations
+                        </div>
+
+                        <div
+                            class="text-xs text-slate-400
+                                   mt-1"
+                        >
+                            Pick anywhere you're genuinely
+                            excited about.
+                        </div>
+
+                    </div>
+
+
+                    <span
+                        id="count"
+                        class="text-xs font-semibold
+                               bg-slate-100
+                               text-slate-500
+                               rounded-full px-3 py-1"
+                    >
+                        0 added
+                    </span>
+
+                </div>
+
+
+                <!-- Destination list -->
+
+                <div
+                    id="destinations"
+                    class="grid grid-cols-2
+                           gap-3 min-h-[120px]"
+                ></div>
+
+
+                <!-- Empty state -->
+
+                <div
+                    id="empty"
+                    class="border border-dashed
+                           border-slate-200
+                           rounded-2xl
+                           py-10
+                           text-center
+                           text-slate-400"
+                >
+
+                    <div class="text-3xl mb-2">
+                        🌎
+                    </div>
+
+                    <div class="text-sm">
+                        Your destination ideas
+                        will appear here.
+                    </div>
+
+                </div>
+
+
+                <!-- Bottom navigation -->
+
+                <div
+                    class="mt-9 pt-7
+                           border-t border-slate-100
+                           flex items-center
+                           justify-between"
+                >
+
+                    <button
+                        type="button"
+                        class="px-5 py-3
+                               rounded-xl
+                               text-sm font-semibold
+                               text-slate-500
+                               hover:bg-slate-50"
+                    >
+                        ← Back
+                    </button>
+
+
+                    <button
+                        id="continueBtn"
+                        type="button"
+                        class="px-7 py-3
+                               rounded-xl
+                               bg-slate-900
+                               text-white
+                               text-sm font-semibold
+                               hover:bg-slate-800
+                               transition"
+                    >
+                        Continue →
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- Progress -->
+
+            <div
+                class="mt-7 flex justify-center gap-2"
+            >
+
+                <span
+                    class="h-2 w-10
+                           rounded-full bg-purple"
+                ></span>
+
+                <span
+                    class="h-2 w-2
+                           rounded-full bg-slate-200"
+                ></span>
+
+                <span
+                    class="h-2 w-2
+                           rounded-full bg-slate-200"
+                ></span>
+
+                <span
+                    class="h-2 w-2
+                           rounded-full bg-slate-200"
+                ></span>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
