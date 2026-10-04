@@ -21,6 +21,7 @@ FORM = (f"{APP}.forms", "SubmissionForm")    # Andrew
 USER = (f"{APP}.models", "User")             # Roy (exists on user_object_branch)
 TRIP = (f"{APP}.models", "Trip")             # Evan
 TRIP_USERS_FIELD = "users"                   # Trip's many-to-many field to User
+TRIP_AI_FIELD = "ai_output"                  # Trip's field holding the AI's reply
 AI_MODULE = f"{APP}.ai"                      # Joe
 AI_FUNCTIONS = ("build_prompt", "call_model", "suggest_destination")
 
@@ -58,6 +59,17 @@ def user_model():
 @pytest.fixture
 def trip_model():
     return require(*TRIP)
+
+
+@pytest.fixture
+def trip_users_target(trip_model):
+    """The model that Trip's users field actually points at."""
+    return trip_model._meta.get_field(TRIP_USERS_FIELD).related_model
+
+
+@pytest.fixture
+def ai_field():
+    return TRIP_AI_FIELD
 
 
 @pytest.fixture
@@ -103,8 +115,13 @@ def expected_user_data():
 
 
 @pytest.fixture
-def trip_with_users(db, trip_model, user_model, users_of):
+def trip_with_users(db, trip_model, user_model, users_of, trip_users_target):
     """A saved trip with three users whose preferences overlap on Austin."""
+    if trip_users_target is not user_model:
+        pytest.skip(
+            f"Trip.{TRIP_USERS_FIELD} links to {trip_users_target._meta.label}, "
+            f"not {user_model._meta.label}; see test_trip_links_to_core_users"
+        )
     trip = trip_model.objects.create(name="Winter break")
     rows = [
         # name,       destinations,          budget, activities

@@ -21,13 +21,14 @@ The tests add DB-persistence checks on top of Roy's in-memory tests in `core/tes
 - Required: everything except `activities` (the model allows blanks; the form enforces the MVP)
 - Rejects: malformed dates, negative or non-numeric budget
 
-**Trip (Evan)**: `core/models.py` → `Trip`
-- `name`, `created_at` (auto), `suggested_destination` (blank by default, holds AI output)
-- `users` = ManyToManyField to `User`
+**Trip (Evan)**: `core/models/trip.py` → `Trip`. On `sprint-1`.
+- `users` must be a ManyToManyField to `core.User` (Roy's model), not `settings.AUTH_USER_MODEL`
+- `ai_output` holds the AI's full reply
 
-**AI caller (Joe)**: `core/ai.py`
+**AI caller (Joe)**: `core/ai.py` (an importable module; the current script lives in a folder with spaces)
 - `build_prompt(trip) -> str` includes every user's destinations and budget, and never their names
-- `call_model(prompt) -> str` is the only function that talks to the API (tests replace it)
-- `suggest_destination(trip) -> str` calls the model once, strips the reply, saves it to
-  `trip.suggested_destination`, and returns it
-- Raises `ValueError` on a blank reply, or on a trip with no users (without calling the model)
+- `call_model(prompt) -> str` is the only function that talks to Ollama (tests replace it)
+- `suggest_destination(trip) -> str` calls the model once, saves the full reply to `trip.ai_output`,
+  and returns the bolded destination as `"City, State, Country"`
+- Raises `ValueError` if the reply has no `**...**` destination, or if the trip has no users
+  (without calling the model)
