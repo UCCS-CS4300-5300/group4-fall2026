@@ -1,3 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Trip Planner - Destinations</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        purple: "#635BFF",
+                        ink: "#18181B"
+                    },
+                    boxShadow: {
+                        soft: "0 10px 30px rgba(0,0,0,0.06)"
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+
 <body class="min-h-screen bg-[#F7F7FB] text-ink">
 
 <div class="min-h-screen flex">
@@ -8,10 +38,7 @@
 
     <main class="flex-1 min-w-0">
 
-        <section
-            class="max-w-[1040px]
-                   mx-auto px-12 py-14"
-        >
+        <section class="max-w-[1040px] mx-auto px-12 py-14">
 
             <!-- Heading -->
 
@@ -19,7 +46,7 @@
 
                 <div
                     class="inline-flex items-center gap-2
-                           rounded-full bg-purple/8
+                           rounded-full bg-purple/10
                            text-purple px-3 py-1.5
                            text-xs font-bold mb-5"
                 >
@@ -49,198 +76,225 @@
 
 
             <!-- =================================================
-                 DESTINATION CARD
+                 DESTINATION FORM
             ================================================== -->
 
-            <div
-                class="mt-10 bg-white
-                       rounded-[28px]
-                       shadow-soft
-                       border border-slate-100
-                       p-8"
+            <form
+                id="destinationForm"
+                method="POST"
+                action="{% url 'home' %}"
             >
 
-                <!-- Input -->
+                {% csrf_token %}
 
-                <label
-                    for="destinationInput"
-                    class="block text-sm
-                           font-semibold
-                           text-slate-700 mb-3"
+
+                <div
+                    class="mt-10 bg-white
+                           rounded-[28px]
+                           shadow-soft
+                           border border-slate-100
+                           p-8"
                 >
-                    Add a destination
-                </label>
+
+                    <!-- Input -->
+
+                    <label
+                        for="destinationInput"
+                        class="block text-sm
+                               font-semibold
+                               text-slate-700 mb-3"
+                    >
+                        Add a destination
+                    </label>
 
 
-                <div class="relative">
+                    <div class="relative">
+
+                        <div
+                            class="flex items-center
+                                   border-2 border-slate-200
+                                   focus-within:border-purple
+                                   rounded-2xl
+                                   transition
+                                   overflow-hidden
+                                   bg-white"
+                        >
+
+                            <span class="pl-5 text-xl">
+                                ⌕
+                            </span>
+
+
+                            <input
+                                id="destinationInput"
+                                autocomplete="off"
+                                type="text"
+                                class="w-full px-4 py-4
+                                       text-base outline-none
+                                       placeholder:text-slate-400"
+                                placeholder="e.g. Denver, Tokyo, New Orleans..."
+                            >
+
+
+                            <button
+                                id="addBtn"
+                                type="button"
+                                class="mr-2 rounded-xl
+                                       bg-purple text-white
+                                       px-5 py-2.5
+                                       font-semibold text-sm
+                                       hover:bg-[#5149e8]
+                                       transition"
+                            >
+                                Add
+                            </button>
+
+                        </div>
+
+
+                        <!-- Autocomplete -->
+
+                        <div
+                            id="suggestions"
+                            class="hidden absolute
+                                   left-0 right-0
+                                   top-[64px]
+                                   bg-white
+                                   border border-slate-200
+                                   rounded-2xl shadow-xl
+                                   z-20 overflow-hidden"
+                        ></div>
+
+                    </div>
+
+
+                    <!-- Destination heading -->
 
                     <div
                         class="flex items-center
-                               border-2 border-slate-200
-                               focus-within:border-purple
-                               rounded-2xl
-                               transition
-                               overflow-hidden
-                               bg-white"
+                               justify-between
+                               mt-10 mb-4"
                     >
 
-                        <span class="pl-5 text-xl">
-                            ⌕
+                        <div>
+
+                            <div class="text-sm font-bold">
+                                Your destinations
+                            </div>
+
+                            <div
+                                class="text-xs text-slate-400
+                                       mt-1"
+                            >
+                                Pick anywhere you're genuinely
+                                excited about.
+                            </div>
+
+                        </div>
+
+
+                        <span
+                            id="count"
+                            class="text-xs font-semibold
+                                   bg-slate-100
+                                   text-slate-500
+                                   rounded-full px-3 py-1"
+                        >
+                            0 added
                         </span>
 
+                    </div>
 
-                        <input
-                            id="destinationInput"
-                            autocomplete="off"
-                            type="text"
-                            class="w-full px-4 py-4
-                                   text-base outline-none
-                                   placeholder:text-slate-400"
-                            placeholder="e.g. Denver, Tokyo, New Orleans..."
+
+                    <!-- Destination list -->
+
+                    <div
+                        id="destinations"
+                        class="grid grid-cols-2 gap-3 min-h-[120px]"
+                    ></div>
+
+
+                    <!-- Empty state -->
+
+                    <div
+                        id="empty"
+                        class="border border-dashed
+                               border-slate-200
+                               rounded-2xl
+                               py-10
+                               text-center
+                               text-slate-400"
+                    >
+
+                        <div class="text-3xl mb-2">
+                            🌎
+                        </div>
+
+                        <div class="text-sm">
+                            Your destination ideas
+                            will appear here.
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         HIDDEN DJANGO INPUTS
+
+                         JavaScript will add inputs here such as:
+
+                         <input name="destinations" value="Denver">
+                         <input name="destinations" value="Tokyo">
+
+                         Django then receives them with:
+
+                         request.POST.getlist("destinations")
+                    ================================================== -->
+
+                    <div id="hiddenDestinations"></div>
+
+
+                    <!-- Bottom navigation -->
+
+                    <div
+                        class="mt-9 pt-7
+                               border-t border-slate-100
+                               flex items-center
+                               justify-between"
+                    >
+
+                        <button
+                            type="button"
+                            onclick="history.back()"
+                            class="px-5 py-3
+                                   rounded-xl
+                                   text-sm font-semibold
+                                   text-slate-500
+                                   hover:bg-slate-50"
                         >
+                            ← Back
+                        </button>
 
 
                         <button
-                            id="addBtn"
-                            type="button"
-                            class="mr-2 rounded-xl
-                                   bg-purple text-white
-                                   px-5 py-2.5
-                                   font-semibold text-sm
-                                   hover:bg-[#5149e8]
+                            id="continueBtn"
+                            type="submit"
+                            class="px-7 py-3
+                                   rounded-xl
+                                   bg-slate-900
+                                   text-white
+                                   text-sm font-semibold
+                                   hover:bg-slate-800
                                    transition"
                         >
-                            Add
+                            Continue →
                         </button>
 
                     </div>
 
-
-                    <!-- Autocomplete -->
-
-                    <div
-                        id="suggestions"
-                        class="hidden absolute
-                               left-0 right-0
-                               top-[64px]
-                               bg-white
-                               border border-slate-200
-                               rounded-2xl shadow-xl
-                               z-20 overflow-hidden"
-                    ></div>
-
                 </div>
 
-
-                <!-- Destination heading -->
-
-                <div
-                    class="flex items-center
-                           justify-between
-                           mt-10 mb-4"
-                >
-
-                    <div>
-
-                        <div class="text-sm font-bold">
-                            Your destinations
-                        </div>
-
-                        <div
-                            class="text-xs text-slate-400
-                                   mt-1"
-                        >
-                            Pick anywhere you're genuinely
-                            excited about.
-                        </div>
-
-                    </div>
-
-
-                    <span
-                        id="count"
-                        class="text-xs font-semibold
-                               bg-slate-100
-                               text-slate-500
-                               rounded-full px-3 py-1"
-                    >
-                        0 added
-                    </span>
-
-                </div>
-
-
-                <!-- Destination list -->
-
-                <div
-                    id="destinations"
-                    class="grid grid-cols-2
-                           gap-3 min-h-[120px]"
-                ></div>
-
-
-                <!-- Empty state -->
-
-                <div
-                    id="empty"
-                    class="border border-dashed
-                           border-slate-200
-                           rounded-2xl
-                           py-10
-                           text-center
-                           text-slate-400"
-                >
-
-                    <div class="text-3xl mb-2">
-                        🌎
-                    </div>
-
-                    <div class="text-sm">
-                        Your destination ideas
-                        will appear here.
-                    </div>
-
-                </div>
-
-
-                <!-- Bottom navigation -->
-
-                <div
-                    class="mt-9 pt-7
-                           border-t border-slate-100
-                           flex items-center
-                           justify-between"
-                >
-
-                    <button
-                        type="button"
-                        class="px-5 py-3
-                               rounded-xl
-                               text-sm font-semibold
-                               text-slate-500
-                               hover:bg-slate-50"
-                    >
-                        ← Back
-                    </button>
-
-
-                    <button
-                        id="continueBtn"
-                        type="button"
-                        class="px-7 py-3
-                               rounded-xl
-                               bg-slate-900
-                               text-white
-                               text-sm font-semibold
-                               hover:bg-slate-800
-                               transition"
-                    >
-                        Continue →
-                    </button>
-
-                </div>
-
-            </div>
+            </form>
 
 
             <!-- Progress -->
@@ -276,3 +330,334 @@
     </main>
 
 </div>
+
+
+<!-- =============================================================
+     JAVASCRIPT
+============================================================== -->
+
+<script>
+
+    // ---------------------------------------------------------
+    // Elements
+    // ---------------------------------------------------------
+
+    const input =
+        document.getElementById("destinationInput");
+
+    const addBtn =
+        document.getElementById("addBtn");
+
+    const destinationsContainer =
+        document.getElementById("destinations");
+
+    const emptyState =
+        document.getElementById("empty");
+
+    const count =
+        document.getElementById("count");
+
+    const form =
+        document.getElementById("destinationForm");
+
+    const hiddenDestinations =
+        document.getElementById("hiddenDestinations");
+
+
+    // ---------------------------------------------------------
+    // Store destinations
+    // ---------------------------------------------------------
+
+    let destinations = [];
+
+
+    // ---------------------------------------------------------
+    // Add a destination
+    // ---------------------------------------------------------
+
+    function addDestination() {
+
+        const destination = input.value.trim();
+
+
+        // Don't allow empty destinations
+
+        if (!destination) {
+            input.focus();
+            return;
+        }
+
+
+        // Don't allow duplicates
+
+        const alreadyExists = destinations.some(
+            item =>
+                item.toLowerCase() === destination.toLowerCase()
+        );
+
+
+        if (alreadyExists) {
+
+            input.value = "";
+            input.focus();
+
+            return;
+        }
+
+
+        // Add destination
+
+        destinations.push(destination);
+
+
+        // Clear input
+
+        input.value = "";
+
+
+        // Update screen
+
+        renderDestinations();
+
+
+        // Put cursor back in input
+
+        input.focus();
+    }
+
+
+    // ---------------------------------------------------------
+    // Remove a destination
+    // ---------------------------------------------------------
+
+    function removeDestination(index) {
+
+        destinations.splice(index, 1);
+
+        renderDestinations();
+    }
+
+
+    // ---------------------------------------------------------
+    // Display destinations
+    // ---------------------------------------------------------
+
+    function renderDestinations() {
+
+        destinationsContainer.innerHTML = "";
+
+
+        // Empty state
+
+        if (destinations.length === 0) {
+
+            emptyState.classList.remove("hidden");
+
+        }
+
+        else {
+
+            emptyState.classList.add("hidden");
+
+
+            destinations.forEach(
+                (destination, index) => {
+
+                    const card =
+                        document.createElement("div");
+
+
+                    card.className =
+                        "flex items-center justify-between " +
+                        "rounded-2xl border border-slate-200 " +
+                        "bg-slate-50 px-4 py-4";
+
+
+                    // Create the left side
+
+                    const left =
+                        document.createElement("div");
+
+                    left.className =
+                        "flex items-center gap-3";
+
+
+                    const icon =
+                        document.createElement("span");
+
+                    icon.className = "text-xl";
+
+                    icon.textContent = "📍";
+
+
+                    const name =
+                        document.createElement("span");
+
+                    name.className =
+                        "text-sm font-semibold text-slate-700";
+
+                    name.textContent = destination;
+
+
+                    left.appendChild(icon);
+                    left.appendChild(name);
+
+
+                    // Create remove button
+
+                    const removeButton =
+                        document.createElement("button");
+
+                    removeButton.type = "button";
+
+                    removeButton.className =
+                        "text-slate-400 " +
+                        "hover:text-red-500 " +
+                        "text-lg transition";
+
+                    removeButton.textContent = "×";
+
+                    removeButton.setAttribute(
+                        "aria-label",
+                        "Remove " + destination
+                    );
+
+
+                    removeButton.addEventListener(
+                        "click",
+                        function () {
+                            removeDestination(index);
+                        }
+                    );
+
+
+                    // Build card
+
+                    card.appendChild(left);
+                    card.appendChild(removeButton);
+
+
+                    destinationsContainer.appendChild(card);
+
+                }
+            );
+
+        }
+
+
+        // Update count
+
+        count.textContent =
+            destinations.length +
+            (destinations.length === 1
+                ? " added"
+                : " added");
+    }
+
+
+    // ---------------------------------------------------------
+    // Prepare data for Django
+    // ---------------------------------------------------------
+
+    function prepareForm() {
+
+        // Remove any old hidden inputs
+
+        hiddenDestinations.innerHTML = "";
+
+
+        // Create one hidden input per destination
+
+        destinations.forEach(function(destination) {
+
+            const hiddenInput =
+                document.createElement("input");
+
+
+            hiddenInput.type = "hidden";
+
+            hiddenInput.name = "destinations";
+
+            hiddenInput.value = destination;
+
+
+            hiddenDestinations.appendChild(hiddenInput);
+
+        });
+
+    }
+
+
+    // ---------------------------------------------------------
+    // Add button
+    // ---------------------------------------------------------
+
+    addBtn.addEventListener(
+        "click",
+        addDestination
+    );
+
+
+    // ---------------------------------------------------------
+    // Press Enter to add
+    // ---------------------------------------------------------
+
+    input.addEventListener(
+        "keydown",
+        function(event) {
+
+            if (event.key === "Enter") {
+
+                event.preventDefault();
+
+                addDestination();
+
+            }
+
+        }
+    );
+
+
+    // ---------------------------------------------------------
+    // Continue / form submission
+    // ---------------------------------------------------------
+
+    form.addEventListener(
+        "submit",
+        function(event) {
+
+            // Require at least one destination
+
+            if (destinations.length === 0) {
+
+                event.preventDefault();
+
+                alert(
+                    "Please add at least one destination."
+                );
+
+                input.focus();
+
+                return;
+            }
+
+
+            // Convert JavaScript destinations
+            // into Django POST inputs
+
+            prepareForm();
+
+        }
+    );
+
+
+    // ---------------------------------------------------------
+    // Initial state
+    // ---------------------------------------------------------
+
+    renderDestinations();
+
+</script>
+
+</body>
+</html>
