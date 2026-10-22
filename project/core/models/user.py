@@ -1,4 +1,5 @@
 from django.db import models
+import datetime
 
 class User(models.Model):
     """A class for storing a user and their trip preferences."""
@@ -53,3 +54,18 @@ class User(models.Model):
         if activity in self.activities:
             self.activities.remove(activity)
             self.save(update_fields=["activities"])
+
+
+class DateRange(models.Model):
+    """A class for storing ranges of available dates for trips."""
+
+    startDate = models.DateField(default=datetime.date.today())
+    endDate = models.DateField(default=datetime.date.today())
+
+    def set_date_range(self, start, end):
+        """Sets both the start and end dates for the date range. Input should use datetime.date objects."""
+        if start > end:
+            raise ValueError('The start date must be before the end date.')
+        self.startDate = models.DateField(start)
+        self.endDate = models.DateField(end)
+        self.save()
