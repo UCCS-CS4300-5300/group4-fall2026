@@ -3,7 +3,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("core", "0005_merge_0002_trip_0004_alter_user_budget"),
+        ("core", "0010_remove_user_availabledates_daterange_user_and_more"),
     ]
 
     operations = [
