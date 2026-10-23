@@ -1,6 +1,6 @@
 import pytest
 from django.urls import reverse
-from .models import StarterItem, Trip, User, AILocation
+from .models import StarterItem, Trip, User, DateRange, AILocation
 from datetime import date
 
 @pytest.mark.django_db
@@ -53,16 +53,25 @@ def test_user_remove_destinations():
 @pytest.mark.django_db
 def test_user_add_dates():
     user = User.objects.create(name = "Jeremiah")
-    user.add_available_date(date(2026, 9, 30).isoformat())
-    user.add_available_date(date(2026, 10, 1).isoformat())
-    assert user.availableDates == [date(2026, 9, 30).isoformat(), date(2026, 10, 1).isoformat()]
+    start = date(2026, 10, 22)
+    end = date(2026, 10, 23)
+
+    user.add_available_date_range(start, end)
+    stored = user.available_ranges.get()
+
+    assert stored.startDate == start
+    assert stored.endDate == end
 
 @pytest.mark.django_db
 def test_user_remove_dates():
     user = User.objects.create(name = "Jeremiah")
-    user.add_available_date(date(2026, 9, 30).isoformat())
-    user.remove_available_date(date(2026, 9, 30).isoformat())
-    assert user.availableDates == []
+    start = date(2026, 10, 22)
+    end = date(2026, 10, 23)
+
+    user.add_available_date_range(start, end)
+    user.remove_available_date_range(start, end)
+    
+    assert user.available_ranges.count() == 0
 
 @pytest.mark.django_db
 def test_user_add_activities():
@@ -77,6 +86,22 @@ def test_user_remove_activities():
     user.add_activity("Surfing")
     user.remove_activity("Surfing")
     assert user.activities == []
+
+@pytest.mark.django_db
+def test_set_date_range():
+    dates = DateRange.objects.create()
+    start = date(2026, 10, 22)
+    end = date(2026, 10, 23)
+    dates.set_date_range(start, end)
+    assert (dates.startDate == start and dates.endDate == end)
+
+@pytest.mark.django_db
+def test_date_range_rejects_invalid_range():
+    with pytest.raises(ValueError):
+        dates = DateRange.objects.create()
+        start = date(2026, 10, 23)
+        end = date(2026, 10, 22)
+        dates.set_date_range(start, end)
 
 # for trip.py
 @pytest.mark.django_db
