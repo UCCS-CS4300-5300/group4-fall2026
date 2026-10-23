@@ -80,9 +80,9 @@ def test_user_remove_activities():
 
 # for trip.py
 @pytest.mark.django_db
-def test_trip_user_helpers_reject_invalid_fields(trip_model, user_model):
-    trip = trip_model.objects.create(name="Winter break")
-    user = user_model.objects.create(name="Quentin")
+def test_trip_user_helpers_reject_invalid_fields():
+    trip = Trip.objects.create(name="Winter break")
+    user = User.objects.create(name="Quentin")
     trip.add_user(user)
 
     with pytest.raises(ValueError, match="Invalid user field"):
@@ -93,8 +93,8 @@ def test_trip_user_helpers_reject_invalid_fields(trip_model, user_model):
 
 
 @pytest.mark.django_db
-def test_trip_defaults_and_ai_output_persist(trip_model):
-    trip = trip_model.objects.create(name="Winter break")
+def test_trip_defaults_and_ai_output_persist():
+    trip = Trip.objects.create(name="Winter break")
 
     assert trip.metadata == {}
     assert trip.ai_output == ""
@@ -106,3 +106,11 @@ def test_trip_defaults_and_ai_output_persist(trip_model):
 
     assert trip.metadata == {"destination": "Oregon"}
     assert trip.ai_output == "Visit the coast."
+
+@pytest.mark.django_db
+def test_trip_access_user_attribute():
+   trip = Trip.objects.create(name="Winter break")
+   user = User.objects.create(name="Quentin")
+   trip.add_user(user)
+   returnAtt = trip.get_user_data(user, "name")
+   assert returnAtt == "Quentin"
