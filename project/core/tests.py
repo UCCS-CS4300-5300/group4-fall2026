@@ -1,6 +1,6 @@
 import pytest
 from django.urls import reverse
-from .models import StarterItem, Trip, User
+from .models import StarterItem, Trip, User, AILocation
 from datetime import date
 
 @pytest.mark.django_db
@@ -114,3 +114,16 @@ def test_trip_access_user_attribute():
    trip.add_user(user)
    returnAtt = trip.get_user_data(user, "name")
    assert returnAtt == "Quentin"
+
+@pytest.mark.django_db
+def test_destination_prompt():
+   trip = Trip.objects.create(name="Winter break")
+   user = User.objects.create(name="Quentin")
+   user2 = User.objects.create(name="Bob")
+   user.add_destination("Los Angeles, California")
+   user2.add_destination("Los Angeles, California")
+   parser = AILocation.objects.create()
+   trip.add_user(user)
+   trip.add_user(user2)
+   outLoc = trip.AIDest(parser)
+   assert outLoc["Location"] == "Los Angeles, California"

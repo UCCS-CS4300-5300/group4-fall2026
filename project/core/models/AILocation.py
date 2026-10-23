@@ -41,4 +41,4 @@ class AILocation(models.Model):
         self.location = self.rawOutput.split("**")[1]
 
         #Return self.location for convenience in testing
-        return self.location
+        return {"Location":self.location, "Raw":self.rawOutput}
