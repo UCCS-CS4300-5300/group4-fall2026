@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Trip Planner - AI Suggestions</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        purple: "#635BFF",
+                        ink: "#18181B"
+                    },
+                    boxShadow: {
+                        soft: "0 10px 30px rgba(0,0,0,0.06)"
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+
+<body class="min-h-screen bg-[#F7F7FB] text-ink">
+
+<main class="max-w-[1040px] mx-auto px-5 sm:px-12 py-14">
+
+    <!-- PLACEHOLDER: shows stored AISuggestion rows only. It does not call the AI. -->
+
+    <div class="max-w-[760px]">
+
+        <div class="inline-flex items-center gap-2 rounded-full bg-purple/10
+                    text-purple px-3 py-1.5 text-xs font-bold mb-5">
+            AI SUGGESTIONS · PLACEHOLDER
+        </div>
+
+        <h1 class="text-4xl sm:text-5xl font-bold tracking-[-.04em] leading-tight">
+            Suggested destinations
+        </h1>
+
+        <p class="mt-4 text-lg text-slate-500 leading-8">
+            This page shows AI suggestions that have already been saved. It's a
+            placeholder for testing and doesn't run the AI itself.
+        </p>
+
+    </div>
+
+
+    {% if suggestions %}
+
+        <ul class="mt-10 space-y-6">
+            {% for s in suggestions %}
+                <li class="bg-white rounded-[28px] shadow-soft border border-slate-100 p-8">
+                    <div class="flex flex-wrap items-baseline justify-between gap-3">
+                        <h2 class="text-2xl font-bold tracking-[-.02em]">{{ s.location }}</h2>
+                        <span class="text-sm text-slate-500">
+                            {{ s.trip.name }} · {{ s.created_at|date:"M j, Y g:i A" }}
+                        </span>
+                    </div>
+                    <p class="mt-4 text-slate-600 leading-7 whitespace-pre-line">{{ s.description }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+
+    {% else %}
+
+        <div class="mt-10 bg-white rounded-[28px] shadow-soft border border-slate-100 p-10 text-center">
+            <p class="text-xl font-semibold">No AI suggestions yet</p>
+            <p class="mt-2 text-slate-500">
+                Saved suggestions will appear here once the AI has run for a trip.
+            </p>
+        </div>
+
+    {% endif %}
+
+    <div class="mt-8">
+        <a href="{% url 'summary' %}"
+           class="px-5 py-3 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-100">
+            ← Back to group summary
+        </a>
+    </div>
+
+</main>
+
+</body>
+</html>
