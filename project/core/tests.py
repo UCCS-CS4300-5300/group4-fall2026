@@ -55,27 +55,25 @@ def test_user_remove_destinations():
 @pytest.mark.django_db
 def test_user_add_dates():
     user = User.objects.create(name = "Jeremiah")
-
-    dates = DateRange.objects.create()
     start = date(2026, 10, 22)
     end = date(2026, 10, 23)
-    dates.set_date_range(start, end)
 
-    user.add_available_date(dates)
-    assert user.availableDates == [dates]
+    user.add_available_date_range(start, end)
+    stored = user.available_ranges.get()
+
+    assert stored.startDate == start
+    assert stored.endDate == end
 
 @pytest.mark.django_db
 def test_user_remove_dates():
     user = User.objects.create(name = "Jeremiah")
-    
-    dates = DateRange.objects.create()
     start = date(2026, 10, 22)
     end = date(2026, 10, 23)
-    dates.set_date_range(start, end)
 
-    user.add_available_date(dates)
-    user.remove_available_date(dates)
-    assert user.availableDates == []
+    user.add_available_date_range(start, end)
+    user.remove_available_date_range(start, end)
+    
+    assert user.available_ranges.count() == 0
 
 @pytest.mark.django_db
 def test_user_add_activities():
