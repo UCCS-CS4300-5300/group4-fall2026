@@ -1,7 +1,6 @@
 import pytest
 from django.urls import reverse
 from .models import StarterItem, Trip, User
-from django.contrib.auth import get_user_model
 from datetime import date
 
 @pytest.mark.django_db
@@ -10,9 +9,8 @@ def test_model():
 
 @pytest.mark.django_db
 def test_trip_stores_metadata_ai_output_and_users():
- user_model=get_user_model()
- first_user=user_model.objects.create_user(username="traveler-one")
- second_user=user_model.objects.create_user(username="traveler-two")
+ first_user=User.objects.create(name="traveler-one")
+ second_user=User.objects.create(name="traveler-two")
  trip=Trip.objects.create(
   name="Coastal trip",
   metadata={"destination":"Oregon","days":5},
@@ -79,3 +77,40 @@ def test_user_remove_activities():
     user.add_activity("Surfing")
     user.remove_activity("Surfing")
     assert user.activities == []
+
+# for trip.py
+@pytest.mark.django_db
+def test_trip_user_helpers_reject_invalid_fields():
+    trip = Trip.objects.create(name="Winter break")
+    user = User.objects.create(name="Quentin")
+    trip.add_user(user)
+
+    with pytest.raises(ValueError, match="Invalid user field"):
+        trip.update_user(user, unknown_field="value")
+
+    with pytest.raises(ValueError, match="Invalid user field"):
+        trip.get_user_data(user, "unknown_field")
+
+
+@pytest.mark.django_db
+def test_trip_defaults_and_ai_output_persist():
+    trip = Trip.objects.create(name="Winter break")
+
+    assert trip.metadata == {}
+    assert trip.ai_output == ""
+
+    trip.metadata = {"destination": "Oregon"}
+    trip.ai_output = "Visit the coast."
+    trip.save()
+    trip.refresh_from_db()
+
+    assert trip.metadata == {"destination": "Oregon"}
+    assert trip.ai_output == "Visit the coast."
+
+@pytest.mark.django_db
+def test_trip_access_user_attribute():
+   trip = Trip.objects.create(name="Winter break")
+   user = User.objects.create(name="Quentin")
+   trip.add_user(user)
+   returnAtt = trip.get_user_data(user, "name")
+   assert returnAtt == "Quentin"
