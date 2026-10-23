@@ -84,3 +84,31 @@ def test_trip_contains_its_users(trip_with_users, users_of):
 def test_users_do_not_leak_between_trips(trip_with_users, trip_model, users_of):
     other = trip_model.objects.create(name="Spring break")
     assert users_of(other).count() == 0
+
+
+@pytest.mark.django_db
+def test_trip_user_helpers_manage_and_access_user_data(trip_model, user_model):
+    trip = trip_model.objects.create(name="Winter break")
+    user = user_model.objects.create(name="Quentin", budget=Decimal("450.00"))
+
+    trip.add_user(user)
+    assert trip.get_user_data(user, "budget") == Decimal("450.00")
+
+    trip.update_user(user, budget=Decimal("600.00"), activities=["hiking"])
+    user.refresh_from_db()
+    assert user.budget == Decimal("600.00")
+    assert user.activities == ["hiking"]
+
+    trip.remove_user(user)
+    assert not trip.users.filter(pk=user.pk).exists()
+
+
+@pytest.mark.django_db
+def test_trip_cannot_update_or_read_unassociated_user(trip_model, user_model):
+    trip = trip_model.objects.create(name="Winter break")
+    user = user_model.objects.create(name="Quentin")
+
+    with pytest.raises(ValueError, match="not associated"):
+        trip.update_user(user, name="Rosalind")
+    with pytest.raises(ValueError, match="not associated"):
+        trip.get_user_data(user, "name")
