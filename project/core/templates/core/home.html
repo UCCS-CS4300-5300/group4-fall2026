@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trip Login</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 350px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #444;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #4a90e2;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #357abd;
+        }
+
+        .starter-items {
+            margin-top: 25px;
+        }
+
+        .starter-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            background-color: #f4f4f4;
+            border-radius: 6px;
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-container">
+        <h1>Your trip starts here.</h1>
+
+        <form action="{% url 'core:destination' %}" method="post">
+            {% csrf_token %}
+
+            <div class="input-group">
+                <label for="tripName">Trip Name</label>
+                <input
+                    type="text"
+                    id="tripName"
+                    name="tripName"
+                    placeholder="Enter trip name"
+                    required
+                >
+            </div>
+
+            <div class="input-group">
+                <label for="personName">Your Name</label>
+                <input
+                    type="text"
+                    id="personName"
+                    name="personName"
+                    placeholder="Enter your name"
+                    required
+                >
+            </div>
+
+            <button type="submit">Continue</button>
+        </form>
+
+        <div class="starter-items">
+            {% for item in items %}
+                <div class="starter-item">{{ item.title }}</div>
+            {% endfor %}
+        </div>
+
+    </div>
+
+</body>
+</html>

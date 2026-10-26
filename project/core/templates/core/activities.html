@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Trip Planner - Activities</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        purple: "#635BFF",
+                        ink: "#18181B"
+                    },
+                    boxShadow: {
+                        soft: "0 10px 30px rgba(0,0,0,0.06)"
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="min-h-screen bg-[#F7F7FB] text-ink">
+
+<div class="min-h-screen flex">
+
+    <main class="flex-1 min-w-0">
+
+        <section class="max-w-[1040px] mx-auto px-12 py-14">
+
+            <!-- Heading -->
+
+            <div class="max-w-[760px]">
+
+                <div class="inline-flex items-center gap-2
+                            rounded-full bg-purple/10
+                            text-purple px-3 py-1.5
+                            text-xs font-bold mb-5">
+                    STEP 4 OF 4
+                </div>
+
+                <h1 class="text-5xl font-bold
+                           tracking-[-.04em] leading-tight">
+                    What do you love to do?
+                </h1>
+
+                <p class="mt-4 text-lg text-slate-500 leading-8">
+                    Choose the experiences you're excited about.
+                    We'll use your interests to personalize your itinerary.
+                </p>
+
+            </div>
+
+            <!-- Activities Form -->
+
+            <form id="activitiesForm"
+                  method="POST"
+                  action="{% url 'core:activities' %}">
+
+                {% csrf_token %}
+
+                <div class="mt-10 bg-white rounded-[28px]
+                            shadow-soft border border-slate-100 p-8">
+
+                    <!-- Activity Categories -->
+
+                    <div>
+
+                        <div class="text-sm font-bold">
+                            Choose your interests
+                        </div>
+
+                        <p class="text-xs text-slate-400 mt-1 mb-5">
+                            Select as many as you like.
+                        </p>
+
+                        <div class="grid grid-cols-2 gap-4">
+
+                            <!-- Food -->
+
+                            <label class="cursor-pointer">
+                                <input type="checkbox"
+                                       name="activities"
+                                       value="food"
+                                       class="peer sr-only">
+
+                                <div class="h-full rounded-2xl border-2
+                                            border-slate-200 p-5 transition
+                                            peer-checked:border-purple
+                                            peer-checked:bg-purple/5
+                                            hover:border-slate-300">
+                                    <div class="text-2xl mb-3">🍜</div>
+
+                                    <div class="font-bold text-sm">
+                                        Food and local cuisine
+                                    </div>
+
+                                    <p class="text-xs text-slate-400 mt-2 leading-5">
+                                        Restaurants, street food, markets,
+                                        and food tours.
+                                    </p>
+                                </div>
+                            </label>
+
+                            <!-- Nature -->
+
+                            <label class="cursor-pointer">
+                                <input type="checkbox"
+                                       name="activities"
+                                       value="nature"
+                                       class="peer sr-only">
+
+                                <div class="h-full rounded-2xl border-2
+                                            border-slate-200 p-5 transition
+                                            peer-checked:border-purple
+                                            peer-checked:bg-purple/5
+                                            hover:border-slate-300">
+                                    <div class="text-2xl mb-3">🏞️</div>
+
+                                    <div class="font-bold text-sm">
+                                        Nature and outdoors
+                                    </div>
+
+                                    <p class="text-xs text-slate-400 mt-2 leading-5">
+                                        Hiking, parks, beaches,
+                                        and scenic views.
+                                    </p>
+                                </div>
+                            </label>
+
+                            <!-- Culture -->
+
+                            <label class="cursor-pointer">
+                                <input type="checkbox"
+                                       name="activities"
+                                       value="culture"
+                                       class="peer sr-only">
+
+                                <div class="h-full rounded-2xl border-2
+                                            border-slate-200 p-5 transition
+                                            peer-checked:border-purple
+                                            peer-checked:bg-purple/5
+                                            hover:border-slate-300">
+                                    <div class="text-2xl mb-3">🏛️</div>
+
+                                    <div class="font-bold text-sm">
+                                        Culture and history
+                                    </div>
+
+                                    <p class="text-xs text-slate-400 mt-2 leading-5">
+                                        Museums, landmarks, architecture,
+                                        and heritage.
+                                    </p>
+                                </div>
+                            </label>
+
+                            <!-- Adventure -->
+
+                            <label class="cursor-pointer">
+                                <input type="checkbox"
+                                       name="activities"
+                                       value="adventure"
+                                       class="peer sr-only">
+
+                                <div class="h-full rounded-2xl border-2
+                                            border-slate-200 p-5 transition
+                                            peer-checked:border-purple
+                                            peer-checked:bg-purple/5
+                                            hover:border-slate-300">
+                                    <div class="text-2xl mb-3">🧗</div>
+
+                                    <div class="font-bold text-sm">
+                                        Adventure and sports
+                                    </div>
+
+                                    <p class="text-xs text-slate-400 mt-2 leading-5">
+                                        Outdoor adventures, cycling,
+                                        water sports, and active fun.
+                                    </p>
+                                </div>
+                            </label>
+
+                            <!-- Shopping -->
+
+                            <label class="cursor-pointer">
+                                <input type="checkbox"
+                                       name="activities"
+                                       value="shopping"
+                                       class="peer sr-only">
+
+                                <div class="h-full rounded-2xl border-2
+                                            border-slate-200 p-5 transition
+                                            peer-checked:border-purple
+                                            peer-checked:bg-purple/5
+                                            hover:border-slate-300">
+                                    <div class="text-2xl mb-3">🛍️</div>
+
+                                    <div class="font-bold text-sm">
+                                        Shopping and markets
+                                    </div>
+
+                                    <p class="text-xs text-slate-400 mt-2 leading-5">
+                                        Local boutiques, souvenirs,
+                                        and unique finds.
+                                    </p>
+                                </div>
+                            </label>
+
+                            <!-- Nightlife -->
+
+                            <label class="cursor-pointer">
+                                <input type="checkbox"
+                                       name="activities"
+                                       value="nightlife"
+                                       class="peer sr-only">
+
+                                <div class="h-full rounded-2xl border-2
+                                            border-slate-200 p-5 transition
+                                            peer-checked:border-purple
+                                            peer-checked:bg-purple/5
+                                            hover:border-slate-300">
+                                    <div class="text-2xl mb-3">🌃</div>
+
+                                    <div class="font-bold text-sm">
+                                        Nightlife and entertainment
+                                    </div>
+
+                                    <p class="text-xs text-slate-400 mt-2 leading-5">
+                                        Live music, shows, evening events,
+                                        and vibrant neighborhoods.
+                                    </p>
+                                </div>
+                            </label>
+
+                            <!-- Relaxation -->
+
+                            <label class="cursor-pointer">
+                                <input type="checkbox"
+                                       name="activities"
+                                       value="relaxation"
+                                       class="peer sr-only">
+
+                                <div class="h-full rounded-2xl border-2
+                                            border-slate-200 p-5 transition
+                                            peer-checked:border-purple
+                                            peer-checked:bg-purple/5
+                                            hover:border-slate-300">
+                                    <div class="text-2xl mb-3">🧘</div>
+
+                                    <div class="font-bold text-sm">
+                                        Relaxation and wellness
+                                    </div>
+
+                                    <p class="text-xs text-slate-400 mt-2 leading-5">
+                                        Spas, quiet escapes, gardens,
+                                        and slow days.
+                                    </p>
+                                </div>
+                            </label>
+
+                            <!-- Local Experiences -->
+
+                            <label class="cursor-pointer">
+                                <input type="checkbox"
+                                       name="activities"
+                                       value="local"
+                                       class="peer sr-only">
+
+                                <div class="h-full rounded-2xl border-2
+                                            border-slate-200 p-5 transition
+                                            peer-checked:border-purple
+                                            peer-checked:bg-purple/5
+                                            hover:border-slate-300">
+                                    <div class="text-2xl mb-3">📸</div>
+
+                                    <div class="font-bold text-sm">
+                                        Local experiences
+                                    </div>
+
+                                    <p class="text-xs text-slate-400 mt-2 leading-5">
+                                        Neighborhood walks, local traditions,
+                                        and hidden gems.
+                                    </p>
+                                </div>
+                            </label>
+
+                        </div>
+                    </div>
+
+                    <!-- Divider -->
+
+                    <div class="my-9 border-t border-slate-100"></div>
+
+                    <!-- Additional Preferences -->
+
+                    <div>
+
+                        <div class="text-sm font-bold">
+                            Anything else we should know?
+                        </div>
+
+                        <p class="text-xs text-slate-400 mt-1 mb-5">
+                            Optional — tell us about any special interests
+                            or experiences you'd like included.
+                        </p>
+
+                        <textarea id="additionalNotes"
+                                  name="additional_notes"
+                                  rows="4"
+                                  maxlength="1000"
+                                  placeholder="e.g. hidden gems, photography spots, family-friendly activities..."
+                                  class="w-full px-4 py-4 border-2
+                                         border-slate-200 rounded-2xl
+                                         outline-none focus:border-purple
+                                         transition text-slate-700
+                                         placeholder:text-slate-400
+                                         resize-y"></textarea>
+
+                    </div>
+
+                    <!-- Navigation -->
+
+                    <div class="mt-9 pt-7 border-t border-slate-100
+                                flex items-center justify-between">
+
+                        <button type="button"
+                                onclick="history.back()"
+                                class="px-5 py-3 rounded-xl text-sm
+                                       font-semibold text-slate-500
+                                       hover:bg-slate-50 transition">
+                            ← Back
+                        </button>
+
+                        <button type="submit"
+                                class="px-7 py-3 rounded-xl bg-slate-900
+                                       text-white text-sm font-semibold
+                                       hover:bg-slate-800 transition">
+                            Create my trip →
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+            <!-- Progress Indicator: Step 4 of 4 -->
+
+            <div class="mt-7 flex justify-center gap-2">
+
+                <!-- Step 1: Destinations -->
+
+                <span class="h-2 w-2 rounded-full bg-slate-200"></span>
+
+                <!-- Step 2: Schedule -->
+
+                <span class="h-2 w-2 rounded-full bg-slate-200"></span>
+
+                <!-- Step 3: Budget -->
+
+                <span class="h-2 w-2 rounded-full bg-slate-200"></span>
+
+                <!-- Step 4: Activities (current step) -->
+
+                <span class="h-2 w-10 rounded-full bg-purple"></span>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+</body>
+</html>

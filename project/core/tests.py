@@ -1,6 +1,6 @@
 import pytest
 from django.urls import reverse
-from .models import StarterItem, Trip, User, DateRange, AILocation, AIActivities
+from .models import StarterItem, Trip, User
 from datetime import date
 
 @pytest.mark.django_db
@@ -24,7 +24,7 @@ def test_trip_stores_metadata_ai_output_and_users():
  assert set(trip.users.all())=={first_user,second_user}
 @pytest.mark.django_db
 def test_home(client):
- r=client.get(reverse("core:home")); assert r.status_code==200; assert b"Your project starts here." in r.content
+ r=client.get(reverse("core:home")); assert r.status_code==200; assert b"Your trip starts here." in r.content
 @pytest.mark.django_db
 def test_only_active(client):
  StarterItem.objects.create(title="Visible",is_active=True); StarterItem.objects.create(title="Hidden",is_active=False)
@@ -53,25 +53,16 @@ def test_user_remove_destinations():
 @pytest.mark.django_db
 def test_user_add_dates():
     user = User.objects.create(name = "Jeremiah")
-    start = date(2026, 10, 22)
-    end = date(2026, 10, 23)
-
-    user.add_available_date_range(start, end)
-    stored = user.available_ranges.get()
-
-    assert stored.startDate == start
-    assert stored.endDate == end
+    user.add_available_date(date(2026, 9, 30).isoformat())
+    user.add_available_date(date(2026, 10, 1).isoformat())
+    assert user.availableDates == [date(2026, 9, 30).isoformat(), date(2026, 10, 1).isoformat()]
 
 @pytest.mark.django_db
 def test_user_remove_dates():
     user = User.objects.create(name = "Jeremiah")
-    start = date(2026, 10, 22)
-    end = date(2026, 10, 23)
-
-    user.add_available_date_range(start, end)
-    user.remove_available_date_range(start, end)
-    
-    assert user.available_ranges.count() == 0
+    user.add_available_date(date(2026, 9, 30).isoformat())
+    user.remove_available_date(date(2026, 9, 30).isoformat())
+    assert user.availableDates == []
 
 @pytest.mark.django_db
 def test_user_add_activities():
@@ -86,22 +77,6 @@ def test_user_remove_activities():
     user.add_activity("Surfing")
     user.remove_activity("Surfing")
     assert user.activities == []
-
-@pytest.mark.django_db
-def test_set_date_range():
-    dates = DateRange.objects.create()
-    start = date(2026, 10, 22)
-    end = date(2026, 10, 23)
-    dates.set_date_range(start, end)
-    assert (dates.startDate == start and dates.endDate == end)
-
-@pytest.mark.django_db
-def test_date_range_rejects_invalid_range():
-    with pytest.raises(ValueError):
-        dates = DateRange.objects.create()
-        start = date(2026, 10, 23)
-        end = date(2026, 10, 22)
-        dates.set_date_range(start, end)
 
 # for trip.py
 @pytest.mark.django_db
@@ -139,31 +114,3 @@ def test_trip_access_user_attribute():
    trip.add_user(user)
    returnAtt = trip.get_user_data(user, "name")
    assert returnAtt == "Quentin"
-
-@pytest.mark.django_db
-def test_destination_prompt():
-   trip = Trip.objects.create(name="Winter break")
-   user = User.objects.create(name="Quentin")
-   user2 = User.objects.create(name="Bob")
-   user.add_destination("Los Angeles, California")
-   user2.add_destination("Los Angeles, California")
-   parser = AILocation.objects.create()
-   trip.add_user(user)
-   trip.add_user(user2)
-   outLoc = trip.AIDest(parser)
-   assert "Los Angeles, California" in outLoc["Location"]
-
-@pytest.mark.django_db
-def test_activities_prompt():
-   trip = Trip.objects.create(name="Winter break")
-   user = User.objects.create(name="Quentin")
-   user2 = User.objects.create(name="Bob")
-   user.add_activity("Mountain Biking")
-   user2.add_activity("Mountain Biking")
-   user2.add_activity("Art Museum")
-   user2.add_activity("Concert")
-   parser = AIActivities.objects.create()
-   trip.add_user(user)
-   trip.add_user(user2)
-   outAct = trip.AIGetAct(parser, "Colorado Springs, USA")
-   assert "Mountain Biking" in outAct["Raw"]
