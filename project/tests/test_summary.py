@@ -152,7 +152,7 @@ def test_summary_page_shows_combined_preferences(client):
     make("Quentin", ["Austin"], [(day(17), day(22))], "500", ["Hiking"])
     make("Rosalind", ["Austin", "Miami"], [(day(18), day(20))], "700", ["Beach"])
     make("Thaddeus", ["Austin"], [(day(19), day(19))], "650", ["Hiking"])
-    r = client.get(reverse("summary"))
+    r = client.get(reverse("core:summary"))
     html = r.content.decode()
     assert r.status_code == 200
     assert "3 members have submitted" in html
@@ -164,7 +164,7 @@ def test_summary_page_shows_combined_preferences(client):
 def test_summary_page_never_shows_names(client):
     make("Quentin", ["Austin"], [(day(18), day(20))], "500", ["Hiking"])
     make("Rosalind", ["Miami"], [(day(19), day(22))], "900", ["Beach"])
-    html = client.get(reverse("summary")).content.decode()
+    html = client.get(reverse("core:summary")).content.decode()
     assert "Quentin" not in html and "Rosalind" not in html
 
 
@@ -172,7 +172,7 @@ def test_summary_page_never_shows_names(client):
 def test_common_range_shown_as_a_span(client):
     make("Quentin", ranges=[(day(18), day(22))])
     make("Rosalind", ranges=[(day(19), day(21))])
-    html = client.get(reverse("summary")).content.decode()
+    html = client.get(reverse("core:summary")).content.decode()
     assert "Dec 19 – Dec 21, 2026 (3 days)" in html
 
 
@@ -181,12 +181,12 @@ def test_summary_page_query_count_does_not_grow_with_members(client, django_asse
     for i in range(10):
         make(f"Member{i}", ["Austin"], [(day(18), day(20))], "500")
     with django_assert_max_num_queries(3):
-        client.get(reverse("summary"))
+        client.get(reverse("core:summary"))
 
 
 @pytest.mark.django_db
 def test_summary_page_with_no_submissions(client):
-    r = client.get(reverse("summary"))
+    r = client.get(reverse("core:summary"))
     assert r.status_code == 200
     assert "No submissions yet" in r.content.decode()
 
@@ -194,8 +194,8 @@ def test_summary_page_with_no_submissions(client):
 @pytest.mark.django_db
 def test_summary_page_updates_when_a_member_edits(client):
     member = make("Quentin", ["Austin"])
-    assert "Austin" in client.get(reverse("summary")).content.decode()
+    assert "Austin" in client.get(reverse("core:summary")).content.decode()
     member.remove_destination("Austin")
     member.add_destination("Portland")
-    html = client.get(reverse("summary")).content.decode()
+    html = client.get(reverse("core:summary")).content.decode()
     assert "Portland" in html and "Austin" not in html
