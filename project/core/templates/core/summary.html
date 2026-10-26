@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Trip Planner - Group Summary</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        purple: "#635BFF",
+                        ink: "#18181B"
+                    },
+                    boxShadow: {
+                        soft: "0 10px 30px rgba(0,0,0,0.06)"
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+
+<body class="min-h-screen bg-[#F7F7FB] text-ink">
+
+<main class="max-w-[1040px] mx-auto px-5 sm:px-12 py-14">
+
+    <!-- Heading -->
+
+    <div class="max-w-[760px]">
+
+        <div class="inline-flex items-center gap-2 rounded-full bg-purple/10
+                    text-purple px-3 py-1.5 text-xs font-bold mb-5">
+            GROUP SUMMARY
+        </div>
+
+        <h1 class="text-4xl sm:text-5xl font-bold tracking-[-.04em] leading-tight">
+            Here's where your group stands
+        </h1>
+
+        <p class="mt-4 text-lg text-slate-500 leading-8">
+            {% if summary.member_count == 1 %}
+                1 member has submitted so far.
+            {% else %}
+                {{ summary.member_count }} members have submitted so far.
+            {% endif %}
+            Answers are combined, so no one's individual choices are shown.
+        </p>
+
+    </div>
+
+
+    {% if not summary.member_count %}
+
+        <!-- Empty state -->
+
+        <div class="mt-10 bg-white rounded-[28px] shadow-soft border border-slate-100 p-10 text-center">
+            <p class="text-xl font-semibold">No submissions yet</p>
+            <p class="mt-2 text-slate-500">
+                The summary fills in as members add their destinations, dates, budget and activities.
+            </p>
+            <a href="{% url 'home' %}"
+               class="inline-block mt-6 px-7 py-3 rounded-xl bg-slate-900 text-white
+                      text-sm font-semibold hover:bg-slate-800 transition">
+                Add your preferences →
+            </a>
+        </div>
+
+    {% else %}
+
+        <div class="mt-10 grid gap-6 md:grid-cols-2">
+
+            <!-- Destinations -->
+
+            <section class="bg-white rounded-[28px] shadow-soft border border-slate-100 p-8 md:col-span-2"
+                     aria-labelledby="destinations-heading">
+
+                <h2 id="destinations-heading" class="text-xl font-bold">Destinations</h2>
+                <p class="mt-1 text-sm text-slate-500">Ranked by how many members suggested each place.</p>
+
+                {% if summary.destinations %}
+                    <ul class="mt-6 space-y-4">
+                        {% for d in summary.destinations %}
+                            <li>
+                                <div class="flex items-baseline justify-between gap-4">
+                                    <span class="font-semibold">{{ d.name }}</span>
+                                    <span class="text-sm text-slate-500 whitespace-nowrap">
+                                        {{ d.count }} of {{ summary.member_count }}
+                                    </span>
+                                </div>
+                                <div class="mt-2 h-2 rounded-full bg-slate-100 overflow-hidden">
+                                    <div class="h-full rounded-full bg-purple"
+                                         style="width: {% widthratio d.count summary.member_count 100 %}%"></div>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="mt-6 text-slate-500">No destinations suggested yet.</p>
+                {% endif %}
+
+            </section>
+
+
+            <!-- Availability -->
+
+            <section class="bg-white rounded-[28px] shadow-soft border border-slate-100 p-8"
+                     aria-labelledby="dates-heading">
+
+                <h2 id="dates-heading" class="text-xl font-bold">Availability</h2>
+
+                {% with a=summary.availability %}
+                    {% if not a.responded %}
+                        <p class="mt-6 text-slate-500">No one has added dates yet.</p>
+                    {% else %}
+                        <p class="mt-1 text-sm text-slate-500">
+                            Based on {{ a.responded }} of {{ summary.member_count }} members who added dates.
+                        </p>
+
+                        {% if a.common %}
+                            <p class="mt-6 text-sm font-semibold text-emerald-700">
+                                Everyone who added dates is free on:
+                            </p>
+                            <ul class="mt-3 flex flex-wrap gap-2">
+                                {% for run in a.common_ranges %}
+                                    <li class="rounded-full bg-emerald-50 text-emerald-800 px-3 py-1.5 text-sm font-medium">
+                                        {% if run.days == 1 %}
+                                            {{ run.start|date:"D, M j, Y" }}
+                                        {% else %}
+                                            {{ run.start|date:"M j" }} – {{ run.end|date:"M j, Y" }} ({{ run.days }} days)
+                                        {% endif %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="mt-6 text-sm font-semibold text-amber-700">
+                                No date works for everyone yet.
+                            </p>
+                            <p class="mt-3 text-sm text-slate-500">Dates with the most people free:</p>
+                            <ul class="mt-3 space-y-2">
+                                {% for b in a.best %}
+                                    <li class="flex justify-between text-sm">
+                                        <span>{{ b.date|date:"D, M j, Y" }}</span>
+                                        <span class="text-slate-500">{{ b.count }} of {{ a.responded }} free</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    {% endif %}
+                {% endwith %}
+
+            </section>
+
+
+            <!-- Budget -->
+
+            <section class="bg-white rounded-[28px] shadow-soft border border-slate-100 p-8"
+                     aria-labelledby="budget-heading">
+
+                <h2 id="budget-heading" class="text-xl font-bold">Budget</h2>
+
+                {% with b=summary.budget %}
+                    {% if not b.responded %}
+                        <p class="mt-6 text-slate-500">No one has added a budget yet.</p>
+                    {% else %}
+                        <p class="mt-1 text-sm text-slate-500">
+                            Based on {{ b.responded }} of {{ summary.member_count }} members who added a budget.
+                        </p>
+
+                        <dl class="mt-6 grid grid-cols-2 gap-4">
+                            <div class="rounded-2xl bg-slate-50 p-4">
+                                <dt class="text-xs font-semibold text-slate-500">RANGE</dt>
+                                <dd class="mt-1 font-bold">${{ b.min|floatformat:0 }} – ${{ b.max|floatformat:0 }}</dd>
+                            </div>
+                            <div class="rounded-2xl bg-slate-50 p-4">
+                                <dt class="text-xs font-semibold text-slate-500">MEDIAN</dt>
+                                <dd class="mt-1 font-bold">${{ b.median|floatformat:0 }}</dd>
+                            </div>
+                            <div class="rounded-2xl bg-slate-50 p-4 col-span-2">
+                                <dt class="text-xs font-semibold text-slate-500">AVERAGE</dt>
+                                <dd class="mt-1 font-bold">${{ b.average|floatformat:2 }}</dd>
+                            </div>
+                        </dl>
+
+                        {% if b.below or b.above %}
+                            <p class="mt-5 text-sm text-amber-700">
+                                {% if b.below %}{{ b.below }} member{{ b.below|pluralize }} {{ b.below|pluralize:"has a budget,have budgets" }} well below the group's.{% endif %}
+                                {% if b.above %}{{ b.above }} member{{ b.above|pluralize }} {{ b.above|pluralize:"has a budget,have budgets" }} well above the group's.{% endif %}
+                                Worth keeping in mind when picking a place.
+                            </p>
+                        {% elif not b.outliers_checked %}
+                            <p class="mt-5 text-xs text-slate-400">
+                                Budget outliers are flagged once at least 3 members add a budget.
+                            </p>
+                        {% endif %}
+                    {% endif %}
+                {% endwith %}
+
+            </section>
+
+
+            <!-- Activities -->
+
+            <section class="bg-white rounded-[28px] shadow-soft border border-slate-100 p-8 md:col-span-2"
+                     aria-labelledby="activities-heading">
+
+                <h2 id="activities-heading" class="text-xl font-bold">Activities</h2>
+                <p class="mt-1 text-sm text-slate-500">Everything the group wants to do, most popular first.</p>
+
+                {% if summary.activities %}
+                    <ul class="mt-6 flex flex-wrap gap-2">
+                        {% for act in summary.activities %}
+                            <li class="rounded-full border border-slate-200 px-4 py-2 text-sm">
+                                {{ act.name }}
+                                <span class="ml-1 text-slate-400">×{{ act.count }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="mt-6 text-slate-500">No activities added yet.</p>
+                {% endif %}
+
+            </section>
+
+        </div>
+
+        <div class="mt-8 flex justify-end">
+            <a href="{% url 'ai_output' %}"
+               class="px-7 py-3 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 transition">
+                See AI suggestions →
+            </a>
+        </div>
+
+    {% endif %}
+
+</main>
+
+</body>
+</html>

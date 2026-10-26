@@ -133,9 +133,11 @@ def trip_with_users(db, trip_model, user_model, users_of, trip_users_target):
         user = user_model.objects.create(
             name=name,
             destinations=destinations,
-            availableDates=[DATE_1, DATE_2],
             budget=Decimal(budget),
             activities=activities,
+        )
+        user.add_available_date_range(
+            dt.date.fromisoformat(DATE_1), dt.date.fromisoformat(DATE_2)
         )
         users_of(trip).add(user)
     return trip
