@@ -51,6 +51,14 @@ class Trip(models.Model):
                 dest.append(j)
         return parser.giveSuggestion(dest)
 
+    def AIGetAct(self, parser, inDest):
+            act = []
+            for i in self.users.all():
+                userActList = self.get_user_data(i, "activities")
+                for j in userActList:
+                    act.append(j)
+            return parser.giveSuggestion(inDest, act)
+
     def _require_user(self, user):
         if user.pk is None or not self.users.filter(pk=user.pk).exists():
             raise ValueError("User is not associated with this trip.")

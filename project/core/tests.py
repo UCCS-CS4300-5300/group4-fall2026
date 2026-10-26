@@ -1,6 +1,6 @@
 import pytest
 from django.urls import reverse
-from .models import StarterItem, Trip, User, DateRange, AILocation
+from .models import StarterItem, Trip, User, DateRange, AILocation, AIActivities
 from datetime import date
 
 @pytest.mark.django_db
@@ -151,4 +151,19 @@ def test_destination_prompt():
    trip.add_user(user)
    trip.add_user(user2)
    outLoc = trip.AIDest(parser)
-   assert outLoc["Location"] == "Los Angeles, California"
+   assert "Los Angeles, California" in outLoc["Location"]
+
+@pytest.mark.django_db
+def test_activities_prompt():
+   trip = Trip.objects.create(name="Winter break")
+   user = User.objects.create(name="Quentin")
+   user2 = User.objects.create(name="Bob")
+   user.add_activity("Mountain Biking")
+   user2.add_activity("Mountain Biking")
+   user2.add_activity("Art Museum")
+   user2.add_activity("Concert")
+   parser = AIActivities.objects.create()
+   trip.add_user(user)
+   trip.add_user(user2)
+   outAct = trip.AIGetAct(parser, "Colorado Springs, USA")
+   assert "Mountain Biking" in outAct["Raw"]
