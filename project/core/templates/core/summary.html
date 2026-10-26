@@ -129,9 +129,13 @@
                                 Everyone who added dates is free on:
                             </p>
                             <ul class="mt-3 flex flex-wrap gap-2">
-                                {% for day in a.common %}
+                                {% for run in a.common_ranges %}
                                     <li class="rounded-full bg-emerald-50 text-emerald-800 px-3 py-1.5 text-sm font-medium">
-                                        {{ day|date:"D, M j, Y" }}
+                                        {% if run.days == 1 %}
+                                            {{ run.start|date:"D, M j, Y" }}
+                                        {% else %}
+                                            {{ run.start|date:"M j" }} – {{ run.end|date:"M j, Y" }} ({{ run.days }} days)
+                                        {% endif %}
                                     </li>
                                 {% endfor %}
                             </ul>

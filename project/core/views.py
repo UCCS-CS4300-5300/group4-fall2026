@@ -34,7 +34,7 @@ def summary(request):
     return render(
         request,
         "core/summary.html",
-        {"summary": build_group_summary(User.objects.all())},
+        {"summary": build_group_summary(User.objects.prefetch_related("available_ranges"))},
     )
 
 

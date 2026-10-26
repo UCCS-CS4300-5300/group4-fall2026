@@ -11,6 +11,8 @@ from statistics import median
 OUTLIER_RATIO = Decimal("0.5")  # 50% below or above
 # Outliers are only flagged in groups this big, so they can't point at one person.
 MIN_GROUP_FOR_OUTLIERS = 3
+# Longest single date range counted, in days, so one bad entry can't slow the page.
+MAX_RANGE_DAYS = 366
 
 
 def _tally(lists):
@@ -37,32 +39,46 @@ def _tally(lists):
     return [{"name": labels[key], "count": n} for key, n in ranked]
 
 
-def _parse_dates(values):
-    """Turn a member's available dates into a set of dates, skipping bad entries."""
-    dates = set()
-    for value in values or []:
-        if isinstance(value, dt.date):
-            dates.add(value)
+def _member_days(member):
+    """
+    Every day a member is free, from their date ranges (start and end included).
+    Ranges with the end before the start are skipped, and very long ranges are
+    capped so one bad entry can't make the page slow.
+    """
+    days = set()
+    for r in member.available_ranges.all():
+        start, end = r.startDate, r.endDate
+        if not start or not end or end < start:
             continue
-        try:
-            dates.add(dt.date.fromisoformat(str(value).strip()))
-        except ValueError:
-            continue
-    return dates
+        end = min(end, start + dt.timedelta(days=MAX_RANGE_DAYS - 1))
+        days.update(start + dt.timedelta(days=i) for i in range((end - start).days + 1))
+    return days
+
+
+def _runs(days):
+    """Group sorted days into consecutive runs: [(start, end), ...]."""
+    runs = []
+    for day in days:
+        if runs and day - runs[-1][1] == dt.timedelta(days=1):
+            runs[-1][1] = day
+        else:
+            runs.append([day, day])
+    return [{"start": a, "end": b, "days": (b - a).days + 1} for a, b in runs]
 
 
 def _availability(members):
-    date_sets = [_parse_dates(m.availableDates) for m in members]
-    date_sets = [s for s in date_sets if s]
-    if not date_sets:
-        return {"responded": 0, "common": [], "best": []}
+    day_sets = [_member_days(m) for m in members]
+    day_sets = [d for d in day_sets if d]
+    if not day_sets:
+        return {"responded": 0, "common": [], "common_ranges": [], "best": []}
 
-    common = sorted(set.intersection(*date_sets))
-    counts = Counter(d for s in date_sets for d in s)
+    common = sorted(set.intersection(*day_sets))
+    counts = Counter(day for days in day_sets for day in days)
     best = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[:5]
     return {
-        "responded": len(date_sets),
+        "responded": len(day_sets),
         "common": common,
+        "common_ranges": _runs(common),
         "best": [{"date": d, "count": n} for d, n in best],
     }
 
@@ -90,7 +106,11 @@ def _budget(members):
 
 
 def build_group_summary(members):
-    """Summarize a collection of core.User objects. Never includes names."""
+    """
+    Summarize a collection of core.User objects. Never includes names.
+    Pass a queryset with prefetch_related("available_ranges") to avoid one
+    database query per member.
+    """
     members = list(members)
     return {
         "member_count": len(members),
