@@ -167,3 +167,29 @@ def test_activities_prompt():
    trip.add_user(user2)
    outAct = trip.AIGetAct(parser, "Colorado Springs, USA")
    assert "Mountain Biking" in outAct["Raw"]
+
+@pytest.mark.django_db
+def test_empty_location_suggestions_rejected():
+   trip = Trip.objects.create(name="Winter break")
+   user = User.objects.create(name="Quentin")
+   user2 = User.objects.create(name="Bob")
+   trip.add_user(user)
+   trip.add_user(user2)
+   parser = AIActivities.objects.create()
+   with pytest.raises(ValueError): trip.AIDest(parser)
+
+@pytest.mark.django_db
+def test_empty_activity_suggestions_rejected():
+   trip = Trip.objects.create(name="Winter break")
+   user = User.objects.create(name="Quentin")
+   user2 = User.objects.create(name="Bob")
+   trip.add_user(user)
+   trip.add_user(user2)
+   parser = AIActivities.objects.create()
+   with pytest.raises(ValueError): trip.AIGetAct(parser, "Colorado Springs, USA")
+
+@pytest.mark.django_db
+def test_no_passed_parser_rejected():
+   trip = Trip.objects.create(name="Winter break")
+   with pytest.raises(ValueError): trip.AIDest()
+   with pytest.raises(ValueError): trip.AIGetAct("Colorado Springs, USA")
