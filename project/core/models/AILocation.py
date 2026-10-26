@@ -75,11 +75,11 @@ class AIActivities(models.Model):
 
         #Get the message from the response and parse the location as an array of strings
         self.rawOutput = resp["message"]["content"]
-        activities = []
+        self.activities = []
         entries = self.rawOutput.split("**")
         for i, con in enumerate(entries):
             if i==1 or i==3 or i==5:
-                activities.append(con)
+                self.activities.append(con)
 
         #Return object variables for convenience in testing
         return {"Activities":self.activities, "Raw":self.rawOutput}
