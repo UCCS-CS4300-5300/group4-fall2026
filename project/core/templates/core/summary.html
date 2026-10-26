@@ -32,6 +32,76 @@
 
 <main class="max-w-[1040px] mx-auto px-5 sm:px-12 py-14">
 
+    
+<section class="mb-8 bg-white rounded-[28px] shadow-soft border border-slate-100 p-8">
+    <h2 class="text-2xl font-bold">Your Trip Summary</h2>
+
+    {% if request.session.trip_name %}
+        <p class="mt-4">
+            <strong>Trip:</strong> {{ request.session.trip_name }}
+        </p>
+    {% endif %}
+
+    {% if request.session.person_name %}
+        <p class="mt-2">
+            <strong>Traveler:</strong> {{ request.session.person_name }}
+        </p>
+    {% endif %}
+
+    <h3 class="mt-6 font-bold">Destinations</h3>
+    <ul class="mt-2 list-disc pl-6">
+        {% for destination in trip_data.destinations %}
+            <li>{{ destination }}</li>
+        {% empty %}
+            <li>No destinations selected.</li>
+        {% endfor %}
+    </ul>
+
+    <h3 class="mt-6 font-bold">Schedule</h3>
+    <p class="mt-2">
+        Start: {{ trip_data.schedule.start_date|default:"Not provided" }}
+    </p>
+    <p>
+        End: {{ trip_data.schedule.end_date|default:"Not provided" }}
+    </p>
+    <p>
+        Pace: {{ trip_data.schedule.pace|default:"Not provided" }}
+    </p>
+    <p>
+        Daily hours:
+        {{ trip_data.schedule.day_start|default:"Not provided" }}
+        – {{ trip_data.schedule.day_end|default:"Not provided" }}
+    </p>
+
+    <h3 class="mt-6 font-bold">Budget</h3>
+    {% if trip_data.budget.amount %}
+        <p class="mt-2">
+            {{ trip_data.budget.amount }}
+            {{ trip_data.budget.currency }}
+        </p>
+    {% else %}
+        <p class="mt-2">No budget entered.</p>
+    {% endif %}
+
+    <h3 class="mt-6 font-bold">Activities</h3>
+    <ul class="mt-2 list-disc pl-6">
+        {% for activity in trip_data.activities %}
+            <li>{{ activity }}</li>
+        {% empty %}
+            <li>No activities selected.</li>
+        {% endfor %}
+    </ul>
+
+    {% if trip_data.additional_notes %}
+        <h3 class="mt-6 font-bold">Additional Notes</h3>
+        <p class="mt-2 whitespace-pre-wrap">{{ trip_data.additional_notes }}</p>
+    {% endif %}
+</section>
+
+    
+   
+
+
     <!-- Heading -->
 
     <div class="max-w-[760px]">
@@ -66,7 +136,7 @@
             <p class="mt-2 text-slate-500">
                 The summary fills in as members add their destinations, dates, budget and activities.
             </p>
-            <a href="{% url 'home' %}"
+            <a href="{% url 'core:home' %}"
                class="inline-block mt-6 px-7 py-3 rounded-xl bg-slate-900 text-white
                       text-sm font-semibold hover:bg-slate-800 transition">
                 Add your preferences →
@@ -129,9 +199,13 @@
                                 Everyone who added dates is free on:
                             </p>
                             <ul class="mt-3 flex flex-wrap gap-2">
-                                {% for day in a.common %}
+                                {% for run in a.common_ranges %}
                                     <li class="rounded-full bg-emerald-50 text-emerald-800 px-3 py-1.5 text-sm font-medium">
-                                        {{ day|date:"D, M j, Y" }}
+                                        {% if run.days == 1 %}
+                                            {{ run.start|date:"D, M j, Y" }}
+                                        {% else %}
+                                            {{ run.start|date:"M j" }} – {{ run.end|date:"M j, Y" }} ({{ run.days }} days)
+                                        {% endif %}
                                     </li>
                                 {% endfor %}
                             </ul>
@@ -228,7 +302,7 @@
         </div>
 
         <div class="mt-8 flex justify-end">
-            <a href="{% url 'ai_output' %}"
+            <a href="{% url 'core:ai_output' %}"
                class="px-7 py-3 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 transition">
                 See AI suggestions →
             </a>

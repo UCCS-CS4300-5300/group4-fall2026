@@ -1,4 +1,5 @@
 """User object (Roy) and Trip object (Evan)."""
+import datetime as dt
 from decimal import Decimal
 
 import pytest
@@ -24,14 +25,15 @@ def test_user_stores_no_ai_output(user_model):
 @pytest.mark.django_db
 def test_user_changes_are_saved_to_database(user_model):
     """The add_* helpers should persist, not just change the object in memory."""
+    start, end = dt.date(2026, 12, 18), dt.date(2026, 12, 22)
     user = user_model.objects.create(name="Quentin")
     user.add_destination("Paris")
-    user.add_available_date("2026-12-18")
+    user.add_available_date_range(start, end)
     user.add_activity("Hiking")
 
     fresh = user_model.objects.get(pk=user.pk)
     assert fresh.destinations == ["Paris"]
-    assert fresh.availableDates == ["2026-12-18"]
+    assert [(r.startDate, r.endDate) for r in fresh.available_ranges.all()] == [(start, end)]
     assert fresh.activities == ["Hiking"]
 
 

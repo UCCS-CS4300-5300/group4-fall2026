@@ -1,3 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Trip Planner - Schedule</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        purple: "#635BFF",
+                        ink: "#18181B"
+                    },
+                    boxShadow: {
+                        soft: "0 10px 30px rgba(0,0,0,0.06)"
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
 <body class="min-h-screen bg-[#F7F7FB] text-ink">
 
 <div class="min-h-screen flex">
@@ -10,55 +38,37 @@
 
             <div class="max-w-[760px]">
 
-                <div
-                    class="inline-flex items-center gap-2
-                           rounded-full bg-purple/8
-                           text-purple px-3 py-1.5
-                           text-xs font-bold mb-5"
-                >
+                <div class="inline-flex items-center gap-2
+                            rounded-full bg-purple/10
+                            text-purple px-3 py-1.5
+                            text-xs font-bold mb-5">
                     STEP 2 OF 4
                 </div>
 
-                <h1
-                    class="text-5xl font-bold
-                           tracking-[-.04em]
-                           leading-tight"
-                >
+                <h1 class="text-5xl font-bold
+                           tracking-[-.04em] leading-tight">
                     When are you traveling?
                 </h1>
 
-                <p
-                    class="mt-4 text-lg text-slate-500
-                           leading-8"
-                >
+                <p class="mt-4 text-lg text-slate-500 leading-8">
                     Tell us when you're going and how much
                     you want to fit into each day.
                 </p>
 
             </div>
 
+            <!-- Schedule Form -->
 
-            <!-- =================================================
-                 SCHEDULE FORM
-            ================================================== -->
-
-            <form
-                id="scheduleForm"
-                method="POST"
-                action="{% url 'schedule' %}"
-            >
+            <form id="scheduleForm"
+                  method="POST"
+                  action="{% url 'core:schedule' %}">
 
                 {% csrf_token %}
 
-                <div
-                    class="mt-10 bg-white
-                           rounded-[28px]
-                           shadow-soft
-                           border border-slate-100
-                           p-8"
-                >
+                <div class="mt-10 bg-white rounded-[28px]
+                            shadow-soft border border-slate-100 p-8">
 
-                    <!-- Dates -->
+                    <!-- Trip Dates -->
 
                     <div>
 
@@ -66,88 +76,52 @@
                             Trip dates
                         </div>
 
-                        <div
-                            class="text-xs text-slate-400
-                                   mt-1 mb-5"
-                        >
+                        <div class="text-xs text-slate-400 mt-1 mb-5">
                             Choose the dates for your trip.
                         </div>
 
-
                         <div class="grid grid-cols-2 gap-4">
 
-                            <!-- Start date -->
-
                             <div>
-
-                                <label
-                                    for="startDate"
-                                    class="block text-sm
-                                           font-semibold
-                                           text-slate-700 mb-2"
-                                >
+                                <label for="startDate"
+                                       class="block text-sm font-semibold
+                                              text-slate-700 mb-2">
                                     Start date
                                 </label>
 
-                                <input
-                                    id="startDate"
-                                    name="start_date"
-                                    type="date"
-                                    required
-                                    class="w-full px-4 py-4
-                                           border-2
-                                           border-slate-200
-                                           rounded-2xl
-                                           outline-none
-                                           focus:border-purple
-                                           transition
-                                           text-slate-700"
-                                >
-
+                                <input id="startDate"
+                                       name="start_date"
+                                       type="date"
+                                       required
+                                       class="w-full px-4 py-4 border-2
+                                              border-slate-200 rounded-2xl
+                                              outline-none focus:border-purple
+                                              transition text-slate-700">
                             </div>
 
-
-                            <!-- End date -->
-
                             <div>
-
-                                <label
-                                    for="endDate"
-                                    class="block text-sm
-                                           font-semibold
-                                           text-slate-700 mb-2"
-                                >
+                                <label for="endDate"
+                                       class="block text-sm font-semibold
+                                              text-slate-700 mb-2">
                                     End date
                                 </label>
 
-                                <input
-                                    id="endDate"
-                                    name="end_date"
-                                    type="date"
-                                    required
-                                    class="w-full px-4 py-4
-                                           border-2
-                                           border-slate-200
-                                           rounded-2xl
-                                           outline-none
-                                           focus:border-purple
-                                           transition
-                                           text-slate-700"
-                                >
-
+                                <input id="endDate"
+                                       name="end_date"
+                                       type="date"
+                                       required
+                                       class="w-full px-4 py-4 border-2
+                                              border-slate-200 rounded-2xl
+                                              outline-none focus:border-purple
+                                              transition text-slate-700">
                             </div>
 
                         </div>
-
                     </div>
-
-
-                    <!-- Divider -->
 
                     <div class="my-9 border-t border-slate-100"></div>
 
-
-                    <!-- Travel pace -->
+                    <!-- Travel Pace -->
 
                     <div>
 
@@ -155,175 +129,80 @@
                             How do you like to travel?
                         </div>
 
-                        <div
-                            class="text-xs text-slate-400
-                                   mt-1 mb-5"
-                        >
+                        <div class="text-xs text-slate-400 mt-1 mb-5">
                             This helps us decide how many activities
                             to put into each day.
                         </div>
 
-
                         <div class="grid grid-cols-3 gap-3">
 
-                            <!-- Relaxed -->
+                            <label class="cursor-pointer">
+                                <input type="radio"
+                                       name="pace"
+                                       value="relaxed"
+                                       class="peer sr-only">
 
-                            <label
-                                class="cursor-pointer"
-                            >
-
-                                <input
-                                    type="radio"
-                                    name="pace"
-                                    value="relaxed"
-                                    class="peer sr-only"
-                                >
-
-                                <div
-                                    class="rounded-2xl
-                                           border-2
-                                           border-slate-200
-                                           p-5
-                                           transition
-                                           peer-checked:border-purple
-                                           peer-checked:bg-purple/5"
-                                >
-
-                                    <div class="text-2xl mb-3">
-                                        🌿
-                                    </div>
-
-                                    <div
-                                        class="font-bold
-                                               text-sm"
-                                    >
+                                <div class="rounded-2xl border-2
+                                            border-slate-200 p-5 transition
+                                            peer-checked:border-purple
+                                            peer-checked:bg-purple/5">
+                                    <div class="text-2xl mb-3">🌿</div>
+                                    <div class="font-bold text-sm">
                                         Relaxed
                                     </div>
-
-                                    <div
-                                        class="text-xs
-                                               text-slate-400
-                                               mt-1
-                                               leading-5"
-                                    >
-                                        Plenty of free time
-                                        and fewer activities.
+                                    <div class="text-xs text-slate-400 mt-1 leading-5">
+                                        Plenty of free time and fewer activities.
                                     </div>
-
                                 </div>
-
                             </label>
 
+                            <label class="cursor-pointer">
+                                <input type="radio"
+                                       name="pace"
+                                       value="balanced"
+                                       checked
+                                       class="peer sr-only">
 
-                            <!-- Balanced -->
-
-                            <label
-                                class="cursor-pointer"
-                            >
-
-                                <input
-                                    type="radio"
-                                    name="pace"
-                                    value="balanced"
-                                    checked
-                                    class="peer sr-only"
-                                >
-
-                                <div
-                                    class="rounded-2xl
-                                           border-2
-                                           border-slate-200
-                                           p-5
-                                           transition
-                                           peer-checked:border-purple
-                                           peer-checked:bg-purple/5"
-                                >
-
-                                    <div class="text-2xl mb-3">
-                                        ⚖️
-                                    </div>
-
-                                    <div
-                                        class="font-bold
-                                               text-sm"
-                                    >
+                                <div class="rounded-2xl border-2
+                                            border-slate-200 p-5 transition
+                                            peer-checked:border-purple
+                                            peer-checked:bg-purple/5">
+                                    <div class="text-2xl mb-3">⚖️</div>
+                                    <div class="font-bold text-sm">
                                         Balanced
                                     </div>
-
-                                    <div
-                                        class="text-xs
-                                               text-slate-400
-                                               mt-1
-                                               leading-5"
-                                    >
-                                        A good mix of activities
-                                        and downtime.
+                                    <div class="text-xs text-slate-400 mt-1 leading-5">
+                                        A good mix of activities and downtime.
                                     </div>
-
                                 </div>
-
                             </label>
 
+                            <label class="cursor-pointer">
+                                <input type="radio"
+                                       name="pace"
+                                       value="packed"
+                                       class="peer sr-only">
 
-                            <!-- Packed -->
-
-                            <label
-                                class="cursor-pointer"
-                            >
-
-                                <input
-                                    type="radio"
-                                    name="pace"
-                                    value="packed"
-                                    class="peer sr-only"
-                                >
-
-                                <div
-                                    class="rounded-2xl
-                                           border-2
-                                           border-slate-200
-                                           p-5
-                                           transition
-                                           peer-checked:border-purple
-                                           peer-checked:bg-purple/5"
-                                >
-
-                                    <div class="text-2xl mb-3">
-                                        ⚡
-                                    </div>
-
-                                    <div
-                                        class="font-bold
-                                               text-sm"
-                                    >
+                                <div class="rounded-2xl border-2
+                                            border-slate-200 p-5 transition
+                                            peer-checked:border-purple
+                                            peer-checked:bg-purple/5">
+                                    <div class="text-2xl mb-3">⚡</div>
+                                    <div class="font-bold text-sm">
                                         Packed
                                     </div>
-
-                                    <div
-                                        class="text-xs
-                                               text-slate-400
-                                               mt-1
-                                               leading-5"
-                                    >
-                                        See as much as possible
-                                        every day.
+                                    <div class="text-xs text-slate-400 mt-1 leading-5">
+                                        See as much as possible every day.
                                     </div>
-
                                 </div>
-
                             </label>
 
                         </div>
-
                     </div>
-
-
-                    <!-- Divider -->
 
                     <div class="my-9 border-t border-slate-100"></div>
 
-
-                    <!-- Daily schedule -->
+                    <!-- Typical Day -->
 
                     <div>
 
@@ -331,148 +210,86 @@
                             Typical day
                         </div>
 
-                        <div
-                            class="text-xs text-slate-400
-                                   mt-1 mb-5"
-                        >
+                        <div class="text-xs text-slate-400 mt-1 mb-5">
                             Optional — when would you like
                             your days to start and finish?
                         </div>
 
-
                         <div class="grid grid-cols-2 gap-4">
 
-                            <!-- Start time -->
-
                             <div>
-
-                                <label
-                                    for="dayStart"
-                                    class="block text-sm
-                                           font-semibold
-                                           text-slate-700 mb-2"
-                                >
+                                <label for="dayStart"
+                                       class="block text-sm font-semibold
+                                              text-slate-700 mb-2">
                                     Start exploring
                                 </label>
 
-                                <input
-                                    id="dayStart"
-                                    name="day_start"
-                                    type="time"
-                                    value="09:00"
-                                    class="w-full px-4 py-4
-                                           border-2
-                                           border-slate-200
-                                           rounded-2xl
-                                           outline-none
-                                           focus:border-purple
-                                           transition"
-                                >
-
+                                <input id="dayStart"
+                                       name="day_start"
+                                       type="time"
+                                       value="09:00"
+                                       class="w-full px-4 py-4 border-2
+                                              border-slate-200 rounded-2xl
+                                              outline-none focus:border-purple
+                                              transition">
                             </div>
 
-
-                            <!-- End time -->
-
                             <div>
-
-                                <label
-                                    for="dayEnd"
-                                    class="block text-sm
-                                           font-semibold
-                                           text-slate-700 mb-2"
-                                >
+                                <label for="dayEnd"
+                                       class="block text-sm font-semibold
+                                              text-slate-700 mb-2">
                                     Finish exploring
                                 </label>
 
-                                <input
-                                    id="dayEnd"
-                                    name="day_end"
-                                    type="time"
-                                    value="21:00"
-                                    class="w-full px-4 py-4
-                                           border-2
-                                           border-slate-200
-                                           rounded-2xl
-                                           outline-none
-                                           focus:border-purple
-                                           transition"
-                                >
-
+                                <input id="dayEnd"
+                                       name="day_end"
+                                       type="time"
+                                       value="21:00"
+                                       class="w-full px-4 py-4 border-2
+                                              border-slate-200 rounded-2xl
+                                              outline-none focus:border-purple
+                                              transition">
                             </div>
 
                         </div>
-
                     </div>
-
 
                     <!-- Navigation -->
 
-                    <div
-                        class="mt-9 pt-7
-                               border-t border-slate-100
-                               flex items-center
-                               justify-between"
-                    >
+                    <div class="mt-9 pt-7 border-t border-slate-100
+                                flex items-center justify-between">
 
-                        <button
-                            type="button"
-                            onclick="history.back()"
-                            class="px-5 py-3
-                                   rounded-xl
-                                   text-sm font-semibold
-                                   text-slate-500
-                                   hover:bg-slate-50"
-                        >
+                        <button type="button"
+                                onclick="history.back()"
+                                class="px-5 py-3 rounded-xl text-sm
+                                       font-semibold text-slate-500
+                                       hover:bg-slate-50">
                             ← Back
                         </button>
 
-
-                        <button
-                            type="submit"
-                            class="px-7 py-3
-                                   rounded-xl
-                                   bg-slate-900
-                                   text-white
-                                   text-sm font-semibold
-                                   hover:bg-slate-800
-                                   transition"
-                        >
+                        <button type="submit"
+                                class="px-7 py-3 rounded-xl bg-slate-900
+                                       text-white text-sm font-semibold
+                                       hover:bg-slate-800 transition">
                             Continue →
                         </button>
 
                     </div>
 
                 </div>
-
             </form>
 
+            <!-- Progress Indicator: Step 2 of 4 -->
 
-            <!-- Progress -->
+            <div class="mt-7 flex justify-center gap-2">
 
-            <div
-                class="mt-7 flex justify-center gap-2"
-            >
+                <span class="h-2 w-2 rounded-full bg-slate-200"></span>
 
-                <span
-                    class="h-2 w-2
-                           rounded-full bg-slate-200"
-                ></span>
+                <span class="h-2 w-10 rounded-full bg-purple"></span>
 
-                <span
-                    class="h-2 w-10
-                           rounded-full bg-purple"
-                ></span>
+                <span class="h-2 w-2 rounded-full bg-slate-200"></span>
 
-                <span
-                    class="h-2 w-2
-                           rounded-full bg-slate-200"
-                ></span>
-
-                <span
-                    class="h-2 w-2
-                           rounded-full bg-slate-200"
-                ></span>
+                <span class="h-2 w-2 rounded-full bg-slate-200"></span>
 
             </div>
 
@@ -482,56 +299,32 @@
 
 </div>
 
+<!-- Date Validation -->
 
 <script>
-
-    const startDate =
-        document.getElementById("startDate");
-
-    const endDate =
-        document.getElementById("endDate");
-
-
-    // Prevent the end date from being
-    // earlier than the start date.
+    const startDate = document.getElementById("startDate");
+    const endDate = document.getElementById("endDate");
 
     startDate.addEventListener("change", function () {
-
         endDate.min = startDate.value;
 
-        if (
-            endDate.value &&
-            endDate.value < startDate.value
-        ) {
+        if (endDate.value && endDate.value < startDate.value) {
             endDate.value = "";
         }
-
     });
 
-
-    // Make sure the end date isn't before
-    // the start date when submitting.
-
-    document
-        .getElementById("scheduleForm")
+    document.getElementById("scheduleForm")
         .addEventListener("submit", function (event) {
-
             if (
                 startDate.value &&
                 endDate.value &&
                 endDate.value < startDate.value
             ) {
-
                 event.preventDefault();
-
-                alert(
-                    "Your end date must be after your start date."
-                );
-
+                alert("Your end date must be after your start date.");
             }
-
         });
-
 </script>
 
 </body>
+</html>

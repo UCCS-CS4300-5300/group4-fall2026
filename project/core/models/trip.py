@@ -1,6 +1,5 @@
 from django.db import models
 
-
 class Trip(models.Model):
     name = models.CharField(max_length=120)
 
@@ -43,6 +42,32 @@ class Trip(models.Model):
         }:
             raise ValueError(f"Invalid user field: {field_name}")
         return getattr(user, field_name)
+
+    def AIDest(self, parser=None):
+        if parser == None:
+            raise ValueError("No AI parser passed")
+        dest = []
+        for i in self.users.all():
+            userDestList = self.get_user_data(i, "destinations")
+            for j in userDestList:
+                dest.append(j)
+        if dest==[]:
+            raise ValueError("No destination suggestions")
+        return parser.giveSuggestion(dest)
+
+    def AIGetAct(self, parser=None, inDest=None):
+            if parser == None:
+                raise ValueError("No AI parser passed")
+            if inDest == None:
+                raise ValueError("No input destination passed")
+            act = []
+            for i in self.users.all():
+                userActList = self.get_user_data(i, "activities")
+                for j in userActList:
+                    act.append(j)
+            if act==[]:
+                raise ValueError("No activity suggestions")
+            return parser.giveSuggestion(inDest, act)
 
     def _require_user(self, user):
         if user.pk is None or not self.users.filter(pk=user.pk).exists():

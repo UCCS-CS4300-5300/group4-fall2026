@@ -1,4 +1,6 @@
 from django.db import models
+import datetime
+import json
 
 class User(models.Model):
     """A class for storing a user and their trip preferences."""
@@ -8,9 +10,6 @@ class User(models.Model):
 
     # A list of destinations the user wants to go to.
     destinations = models.JSONField(blank=True, default=list)
-
-    # A list of dates the user is available to go on vacation for.
-    availableDates = models.JSONField(blank=True, default=list)
 
     # The user's individual budget for the trip.
     budget = models.DecimalField(null=True, blank=True, max_digits=100, decimal_places=2)
@@ -30,17 +29,15 @@ class User(models.Model):
             self.destinations.remove(destination)
             self.save(update_fields=["destinations"])
 
-    def add_available_date(self, date):
+    def add_available_date_range(self, start, end):
         """Adds date to the user's list of available travel dates and saves it."""
-        if date not in self.availableDates:
-            self.availableDates.append(date)
-            self.save(update_fields=["availableDates"])
+        if start > end:
+            raise ValueError('The start date must be before the end date.')
+        date_range, _ = self.available_ranges.get_or_create(startDate=start, endDate=end)
 
-    def remove_available_date(self, date):
+    def remove_available_date_range(self, start, end):
         """Removes date from the user's list of available travel dates if present."""
-        if date in self.availableDates:
-            self.availableDates.remove(date)
-            self.save(update_fields=["availableDates"])
+        self.available_ranges.filter(startDate=start, endDate=end).delete()
 
     def add_activity(self, activity):
         """Adds activity to the user's list of preferred activities and saves it."""
@@ -53,3 +50,19 @@ class User(models.Model):
         if activity in self.activities:
             self.activities.remove(activity)
             self.save(update_fields=["activities"])
+
+
+class DateRange(models.Model):
+    """A class for storing ranges of available dates for trips."""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE,related_name="available_ranges",null=True)
+    startDate = models.DateField(default=datetime.date.today)
+    endDate = models.DateField(default=datetime.date.today)
+
+    def set_date_range(self, start, end):
+        """Sets both the start and end dates for the date range. Input should use datetime.date objects."""
+        if start > end:
+            raise ValueError('The start date must be before the end date.')
+        self.startDate = start
+        self.endDate = end
+        self.save()

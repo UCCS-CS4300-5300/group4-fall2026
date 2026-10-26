@@ -16,6 +16,8 @@ The tests add DB-persistence checks on top of Roy's in-memory tests in `core/tes
 
 **Form (Andrew)**: `core/forms.py` → `SubmissionForm`, a ModelForm that saves a `User`
 - Fields: `destinations`, `availableDates`, `budget`, `activities`
+- NOTE: `User.availableDates` was replaced by `DateRange` (`user.available_ranges`) in Sprint 2.
+  The form tests still use the old field and skip until a form exists; update them with the form.
 - Assumed input: comma-separated text, e.g. `"Denver, Austin"` and `"2026-12-18, 2026-12-19"`,
   stored as lists. Dates stored as `YYYY-MM-DD` strings, same as Roy's tests.
 - Required: everything except `activities` (the model allows blanks; the form enforces the MVP)

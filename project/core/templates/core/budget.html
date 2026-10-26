@@ -1,0 +1,278 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Trip Planner - Budget</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        purple: "#635BFF",
+                        ink: "#18181B"
+                    },
+                    boxShadow: {
+                        soft: "0 10px 30px rgba(0,0,0,0.06)"
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="min-h-screen bg-[#F7F7FB] text-ink">
+
+<div class="min-h-screen flex">
+
+    <!-- MAIN CONTENT -->
+
+    <main class="flex-1 min-w-0">
+
+        <section class="max-w-[1040px] mx-auto px-12 py-14">
+
+            <!-- Heading -->
+
+            <div class="max-w-[760px]">
+
+                <div
+                    class="inline-flex items-center gap-2
+                           rounded-full bg-purple/10
+                           text-purple px-3 py-1.5
+                           text-xs font-bold mb-5"
+                >
+                    STEP 3 OF 4
+                </div>
+
+                <h1
+                    class="text-5xl font-bold
+                           tracking-[-.04em]
+                           leading-tight"
+                >
+                    What's your trip budget?
+                </h1>
+
+                <p
+                    class="mt-4 text-lg text-slate-500
+                           leading-8"
+                >
+                    Set a budget that works for you, and we'll help
+                    you find experiences that fit your spending plans.
+                </p>
+
+            </div>
+
+            <!-- BUDGET FORM -->
+
+            <form
+                id="budgetForm"
+                method="POST"
+                action="{% url 'core:budget' %}"
+            >
+
+                {% csrf_token %}
+
+                <div
+                    class="mt-10 bg-white
+                           rounded-[28px]
+                           shadow-soft
+                           border border-slate-100
+                           p-8"
+                >
+
+                    <!-- Total Budget -->
+
+                    <div>
+
+                        <div class="text-sm font-bold">
+                            Total trip budget
+                        </div>
+
+                        <p
+                            class="text-xs text-slate-400
+                                   mt-1 mb-5"
+                        >
+                            How much would you like to spend
+                            on the trip?
+                        </p>
+
+                        <div class="grid grid-cols-3 gap-4">
+
+                            <!-- Budget Amount -->
+
+                            <div class="col-span-2">
+
+                                <label
+                                    for="budgetAmount"
+                                    class="block text-sm
+                                           font-semibold
+                                           text-slate-700 mb-2"
+                                >
+                                    Budget amount
+                                </label>
+
+                                <input
+                                    id="budgetAmount"
+                                    name="budget_amount"
+                                    type="number"
+                                    min="1"
+                                    step="0.01"
+                                    required
+                                    placeholder="e.g. 2500"
+                                    class="w-full px-4 py-4
+                                           border-2
+                                           border-slate-200
+                                           rounded-2xl
+                                           outline-none
+                                           focus:border-purple
+                                           transition
+                                           text-slate-700"
+                                >
+
+                            </div>
+
+                            <!-- Currency -->
+
+                            <div>
+
+                                <label
+                                    for="currency"
+                                    class="block text-sm
+                                           font-semibold
+                                           text-slate-700 mb-2"
+                                >
+                                    Currency
+                                </label>
+
+                                <select
+                                    id="currency"
+                                    name="currency"
+                                    class="w-full px-3 py-4
+                                           border-2
+                                           border-slate-200
+                                           rounded-2xl
+                                           outline-none
+                                           focus:border-purple
+                                           transition
+                                           text-slate-700
+                                           bg-white"
+                                >
+
+                                    <option value="USD">
+                                        USD ($)
+                                    </option>
+
+                                    <option value="EUR">
+                                        EUR (€)
+                                    </option>
+
+                                    <option value="GBP">
+                                        GBP (£)
+                                    </option>
+
+                                    <option value="CAD">
+                                        CAD ($)
+                                    </option>
+
+                                    <option value="AUD">
+                                        AUD ($)
+                                    </option>
+
+                                    <option value="JPY">
+                                        JPY (¥)
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                        <p class="text-xs text-slate-400 mt-3">
+                            Enter the total amount for your group.
+                        </p>
+
+                    </div>
+
+                    <!-- Bottom Navigation -->
+
+                    <div
+                        class="mt-9 pt-7
+                               border-t border-slate-100
+                               flex items-center
+                               justify-between"
+                    >
+
+                        <button
+                            type="button"
+                            onclick="history.back()"
+                            class="px-5 py-3
+                                   rounded-xl
+                                   text-sm font-semibold
+                                   text-slate-500
+                                   hover:bg-slate-50
+                                   transition"
+                        >
+                            ← Back
+                        </button>
+
+                        <button
+                            type="submit"
+                            class="px-7 py-3
+                                   rounded-xl
+                                   bg-slate-900
+                                   text-white
+                                   text-sm font-semibold
+                                   hover:bg-slate-800
+                                   transition"
+                        >
+                            Continue →
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+            <!-- Progress Indicator -->
+
+            <div class="mt-7 flex justify-center gap-2">
+
+                <span
+                    class="h-2 w-2
+                           rounded-full bg-slate-200"
+                ></span>
+
+                <span
+                    class="h-2 w-2
+                           rounded-full bg-slate-200"
+                ></span>
+
+                <span
+                    class="h-2 w-10
+                           rounded-full bg-purple"
+                ></span>
+
+                <span
+                    class="h-2 w-2
+                           rounded-full bg-slate-200"
+                ></span>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+</body>
+</html>

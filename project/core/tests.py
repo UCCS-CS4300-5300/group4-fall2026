@@ -1,6 +1,6 @@
 import pytest
 from django.urls import reverse
-from .models import StarterItem, Trip, User
+from .models import StarterItem, Trip, User, DateRange, AILocation, AIActivities
 from datetime import date
 
 @pytest.mark.django_db
@@ -24,7 +24,7 @@ def test_trip_stores_metadata_ai_output_and_users():
  assert set(trip.users.all())=={first_user,second_user}
 @pytest.mark.django_db
 def test_home(client):
- r=client.get(reverse("core:home")); assert r.status_code==200; assert b"Your project starts here." in r.content
+ r=client.get(reverse("core:home")); assert r.status_code==200; assert b"Your trip starts here." in r.content
 @pytest.mark.django_db
 def test_only_active(client):
  StarterItem.objects.create(title="Visible",is_active=True); StarterItem.objects.create(title="Hidden",is_active=False)
@@ -114,3 +114,57 @@ def test_trip_access_user_attribute():
    trip.add_user(user)
    returnAtt = trip.get_user_data(user, "name")
    assert returnAtt == "Quentin"
+
+@pytest.mark.django_db
+def test_destination_prompt():
+   trip = Trip.objects.create(name="Winter break")
+   user = User.objects.create(name="Quentin")
+   user2 = User.objects.create(name="Bob")
+   user.add_destination("Los Angeles, California")
+   user2.add_destination("Los Angeles, California")
+   parser = AILocation.objects.create()
+   trip.add_user(user)
+   trip.add_user(user2)
+   outLoc = trip.AIDest(parser)
+   assert "Los Angeles, California" in outLoc["Location"]
+
+@pytest.mark.django_db
+def test_activities_prompt():
+   trip = Trip.objects.create(name="Winter break")
+   user = User.objects.create(name="Quentin")
+   user2 = User.objects.create(name="Bob")
+   user.add_activity("Mountain Biking")
+   user2.add_activity("Mountain Biking")
+   user2.add_activity("Art Museum")
+   user2.add_activity("Concert")
+   parser = AIActivities.objects.create()
+   trip.add_user(user)
+   trip.add_user(user2)
+   outAct = trip.AIGetAct(parser, "Colorado Springs, USA")
+   assert "Mountain Biking" in outAct["Raw"]
+
+@pytest.mark.django_db
+def test_empty_location_suggestions_rejected():
+   trip = Trip.objects.create(name="Winter break")
+   user = User.objects.create(name="Quentin")
+   user2 = User.objects.create(name="Bob")
+   trip.add_user(user)
+   trip.add_user(user2)
+   parser = AIActivities.objects.create()
+   with pytest.raises(ValueError): trip.AIDest(parser)
+
+@pytest.mark.django_db
+def test_empty_activity_suggestions_rejected():
+   trip = Trip.objects.create(name="Winter break")
+   user = User.objects.create(name="Quentin")
+   user2 = User.objects.create(name="Bob")
+   trip.add_user(user)
+   trip.add_user(user2)
+   parser = AIActivities.objects.create()
+   with pytest.raises(ValueError): trip.AIGetAct(parser, "Colorado Springs, USA")
+
+@pytest.mark.django_db
+def test_no_passed_parser_rejected():
+   trip = Trip.objects.create(name="Winter break")
+   with pytest.raises(ValueError): trip.AIDest()
+   with pytest.raises(ValueError): trip.AIGetAct("Colorado Springs, USA")
