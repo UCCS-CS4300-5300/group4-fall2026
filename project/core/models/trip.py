@@ -11,6 +11,7 @@ class Trip(models.Model):
 
     metadata = models.JSONField(default=dict, blank=True)
     ai_output = models.TextField(blank=True)
+    currency = models.CharField(max_length=3, default="USD")
 
     def add_user(self, user):
         self.users.add(user)
