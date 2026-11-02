@@ -33,7 +33,7 @@ def test_user_changes_are_saved_to_database(user_model):
 
     fresh = user_model.objects.get(pk=user.pk)
     assert fresh.destinations == ["Paris"]
-    assert [(r.startDate, r.endDate) for r in fresh.available_ranges.all()] == [(start, end)]
+    assert [(r.start_date, r.end_date) for r in fresh.available_ranges.all()] == [(start, end)]
     assert fresh.activities == ["Hiking"]
 
 
