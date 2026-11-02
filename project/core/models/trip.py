@@ -69,6 +69,13 @@ class Trip(models.Model):
                 raise ValueError("No activity suggestions")
             return parser.giveSuggestion(inDest, act)
 
+    def date_window(self):
+        """Earliest start and latest end across every member's available date ranges."""
+        ranges = [r for u in self.users.all() for r in u.available_ranges.all()]
+        if not ranges:
+            return None
+        return min(r.startDate for r in ranges), max(r.endDate for r in ranges)
+
     def _require_user(self, user):
         if user.pk is None or not self.users.filter(pk=user.pk).exists():
             raise ValueError("User is not associated with this trip.")
