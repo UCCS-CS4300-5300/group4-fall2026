@@ -14,6 +14,9 @@ class User(models.Model):
     # The user's individual budget for the trip.
     budget = models.DecimalField(null=True, blank=True, max_digits=100, decimal_places=2)
 
+    # Currency for the budget (the budget page already asks for one).
+    budget_currency = models.CharField(max_length=3, default="USD")
+
     # A list of activities the user wants to do. Stored as strings.
     activities = models.JSONField(blank=True, default=list)
 
