@@ -140,6 +140,7 @@ def test_trip_access_user_attribute():
    returnAtt = trip.get_user_data(user, "name")
    assert returnAtt == "Quentin"
 
+@pytest.mark.live
 @pytest.mark.django_db
 def test_destination_prompt():
    trip = Trip.objects.create(name="Winter break")
@@ -153,6 +154,7 @@ def test_destination_prompt():
    outLoc = trip.AIDest(parser)
    assert "Los Angeles, California" in outLoc["Location"]
 
+@pytest.mark.live
 @pytest.mark.django_db
 def test_activities_prompt():
    trip = Trip.objects.create(name="Winter break")
