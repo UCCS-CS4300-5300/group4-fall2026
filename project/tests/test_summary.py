@@ -101,7 +101,7 @@ def test_members_without_dates_and_backwards_ranges_are_ignored():
     make("Quentin", ranges=[(day(18), day(20))])
     rosalind = make("Rosalind", ranges=[(day(19), day(21))])
     # A backwards range can't come from add_available_date_range, but can from the admin.
-    rosalind.available_ranges.create(startDate=day(30), endDate=day(5))
+    rosalind.available_ranges.create(start_date=day(30), end_date=day(5))
     make("Thaddeus")  # no dates yet; shouldn't wipe out the overlap
     a = summarize()["availability"]
     assert a["responded"] == 2

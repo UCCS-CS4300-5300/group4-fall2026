@@ -47,7 +47,7 @@ def _member_days(member):
     """
     days = set()
     for r in member.available_ranges.all():
-        start, end = r.startDate, r.endDate
+        start, end = r.start_date, r.end_date
         if not start or not end or end < start:
             continue
         end = min(end, start + dt.timedelta(days=MAX_RANGE_DAYS - 1))
