@@ -100,7 +100,7 @@ def budget(request):
 
         try:
             amount = Decimal(budget_amount)
-            if not amount.is_finite() or amount <= 0:
+            if not amount.is_finite():
                 raise InvalidOperation
         except (InvalidOperation, ValueError):
             return render(
