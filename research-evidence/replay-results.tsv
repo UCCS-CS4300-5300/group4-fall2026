@@ -1,0 +1,36 @@
+# Replay of every commit with the same method as the Milestone 1 baseline.
+# full_suite = pytest -q; ci_condition = makemigrations --check + pytest excluding the two live-AI tests.
+# Environment: Python 3.13, Django 5.2, pytest 8.4, no Ollama server.
+group	commit	migrations	full_suite	ci_condition_tests	ci_condition
+sprint2	4bbdf01	DIRTY	6 failed, 12 passed, 23 skipped in 0.75s	6 failed, 12 passed, 23 skipped in 0.72s	FAIL
+sprint2	cb8408c	DIRTY	2 failed, 20 passed, 21 skipped, 2 errors in 0.47s	2 failed, 20 passed, 21 skipped, 2 errors in 0.60s	FAIL
+sprint2	b2f8028	clean	2 failed, 23 passed, 21 skipped in 0.56s	2 failed, 23 passed, 21 skipped in 0.49s	FAIL
+sprint2	29bfc73	clean	3 failed, 23 passed, 21 skipped in 0.58s	2 failed, 23 passed, 21 skipped, 1 deselected in 0.46s	FAIL
+sprint2	067b79a	DIRTY	6 failed, 12 passed, 23 skipped in 0.89s	6 failed, 12 passed, 23 skipped in 0.81s	FAIL
+sprint2	44bbe98	DIRTY	1 error in 0.19s	1 error in 0.20s	FAIL
+sprint2	e185afe	clean	7 failed, 13 passed, 23 skipped in 0.57s	7 failed, 13 passed, 23 skipped in 0.61s	FAIL
+sprint2	c076350	DIRTY	3 passed, 8 skipped, 37 errors in 2.75s	3 passed, 8 skipped, 37 errors in 2.68s	FAIL
+sprint2	e67f218	clean	3 failed, 22 passed, 21 skipped, 2 errors in 0.71s	3 failed, 22 passed, 21 skipped, 2 errors in 0.91s	FAIL
+sprint2	d503929	clean	4 failed, 22 passed, 21 skipped, 2 errors in 0.75s	3 failed, 22 passed, 21 skipped, 1 deselected, 2 errors in 0.74s	FAIL
+sprint2	8022e61	DIRTY	6 failed, 12 passed, 23 skipped in 0.74s	6 failed, 12 passed, 23 skipped in 0.68s	FAIL
+sprint2	85942ff	DIRTY	10 failed, 21 passed, 23 skipped in 0.84s	10 failed, 21 passed, 23 skipped in 0.93s	FAIL
+sprint2	801baf9	DIRTY	14 failed, 21 passed, 23 skipped in 1.72s	14 failed, 21 passed, 23 skipped in 1.25s	FAIL
+sprint2	69a10c9	DIRTY	10 failed, 25 passed, 23 skipped in 2.17s	10 failed, 25 passed, 23 skipped in 2.09s	FAIL
+sprint2	8567f2d	DIRTY	10 failed, 25 passed, 23 skipped in 2.22s	10 failed, 25 passed, 23 skipped in 2.17s	FAIL
+sprint2	ed184bf	clean	2 failed, 40 passed, 21 skipped in 0.65s	2 failed, 40 passed, 21 skipped in 0.53s	FAIL
+sprint2	6c8e0e1	clean	2 failed, 40 passed, 21 skipped in 0.62s	2 failed, 40 passed, 21 skipped in 0.70s	FAIL
+sprint2	fe49ed3	clean	15 failed, 28 passed, 21 skipped, 2 errors in 1.93s	14 failed, 28 passed, 21 skipped, 1 deselected, 2 errors in 2.19s	FAIL
+sprint2	10c51a7	clean	4 failed, 43 passed, 21 skipped, 2 errors in 1.10s	3 failed, 43 passed, 21 skipped, 1 deselected, 2 errors in 1.00s	FAIL
+sprint2	faf9182	clean	3 failed, 46 passed, 21 skipped in 0.80s	2 failed, 46 passed, 21 skipped, 1 deselected in 0.92s	FAIL
+sprint2	308aaa2	clean	3 failed, 46 passed, 21 skipped in 0.93s	2 failed, 46 passed, 21 skipped, 1 deselected in 0.93s	FAIL
+sprint2	97477be	clean	4 failed, 46 passed, 21 skipped in 0.90s	2 failed, 46 passed, 21 skipped, 2 deselected in 0.72s	FAIL
+sprint2	ba972ab	clean	4 failed, 46 passed, 21 skipped in 0.85s	2 failed, 46 passed, 21 skipped, 2 deselected in 0.76s	FAIL
+sprint2	97f6203	clean	4 failed, 49 passed, 21 skipped in 1.07s	2 failed, 49 passed, 21 skipped, 2 deselected in 0.84s	FAIL
+sprint2	8b1b290	clean	12 failed, 34 passed, 21 skipped in 0.95s	12 failed, 34 passed, 21 skipped in 1.15s	FAIL
+sprint2	4ca0721	clean	14 failed, 37 passed, 21 skipped in 1.13s	12 failed, 37 passed, 21 skipped, 2 deselected in 0.92s	FAIL
+sprint2	1baabb7	clean	9 failed, 42 passed, 21 skipped in 1.64s	7 failed, 42 passed, 21 skipped, 2 deselected in 1.51s	FAIL
+main-tag	31f84a4	clean	9 failed, 42 passed, 21 skipped in 1.63s	7 failed, 42 passed, 21 skipped, 2 deselected in 1.46s	FAIL
+research	3d1deb0	clean	2 failed, 51 passed, 21 skipped in 0.83s	51 passed, 21 skipped, 2 deselected in 0.72s	PASS
+research	f9c9ad0	clean	2 failed, 51 passed, 21 skipped in 0.91s	51 passed, 21 skipped, 2 deselected in 0.79s	PASS
+research	d3ed04a	clean	2 failed, 51 passed, 21 skipped in 0.94s	51 passed, 21 skipped, 2 deselected in 0.63s	PASS
+research	1ef75dd	clean	2 failed, 51 passed, 21 skipped in 0.82s	51 passed, 21 skipped, 2 deselected in 0.71s	PASS

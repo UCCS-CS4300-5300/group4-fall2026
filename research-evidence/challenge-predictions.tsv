@@ -1,0 +1,14 @@
+# Controlled challenges for the CI gate, predicted locally by running the workflow's exact steps
+# (Python 3.12, makemigrations --check, pytest -m "not live") on the code each pull request would test.
+# Compare with the GitHub Actions results on each research pull request.
+challenge	models	branch(es)	expected	local_result
+C0	control	research/c0-control	pass	pass (51 passed)
+C1	E3: route renamed, another page's link missed	research/c1-route-rename	fail	fail: 4 AI-page tests (server error on /ai-output/)
+C2	model field without migration	research/c2-missing-migration	fail	fail at migration check
+C4	bug in a page with no tests	research/c4-untested-view	pass (escape)	pass: bug not detected
+C3-A alone	E2: rename DateRange fields	research/c3a-rename-date-fields	pass	pass (51 passed)
+C3-B alone	E2: new code reads old field names	research/c3b-trip-date-window	pass	pass (52 passed)
+C3 combined	E2: B tested after A merged	both	fail	Git merge clean; fail: test_trip_date_window_spans_all_members
+C5-A alone	E1: migration 0014 on User	research/c5a-user-home-city	pass	pass (51 passed)
+C5-B alone	E1: migration 0014 on Trip	research/c5b-trip-currency	pass	pass (51 passed)
+C5 combined	E1: B tested after A merged	both	fail	Git merge clean; fail at migration check (conflicting migrations)
