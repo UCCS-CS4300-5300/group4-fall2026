@@ -14,6 +14,9 @@ class User(models.Model):
     # The user's individual budget for the trip.
     budget = models.DecimalField(null=True, blank=True, max_digits=100, decimal_places=2)
 
+    # City the member would travel from.
+    home_city = models.CharField(max_length=100, blank=True, default="")
+
     # A list of activities the user wants to do. Stored as strings.
     activities = models.JSONField(blank=True, default=list)
 
