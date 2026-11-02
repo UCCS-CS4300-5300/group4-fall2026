@@ -195,3 +195,15 @@ def test_no_passed_parser_rejected():
    trip = Trip.objects.create(name="Winter break")
    with pytest.raises(ValueError): trip.AIDest()
    with pytest.raises(ValueError): trip.AIGetAct("Colorado Springs, USA")
+
+
+@pytest.mark.django_db
+def test_trip_date_window_spans_all_members():
+    trip = Trip.objects.create(name="Winter break")
+    first = User.objects.create(name="Quentin")
+    second = User.objects.create(name="Rosalind")
+    first.add_available_date_range(date(2026, 12, 18), date(2026, 12, 20))
+    second.add_available_date_range(date(2026, 12, 19), date(2026, 12, 23))
+    trip.add_user(first)
+    trip.add_user(second)
+    assert trip.date_window() == (date(2026, 12, 18), date(2026, 12, 23))
