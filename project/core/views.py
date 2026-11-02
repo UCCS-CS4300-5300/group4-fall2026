@@ -142,7 +142,7 @@ def activities(request):
         request.session["trip_additional_notes"] = additional_notes
 
         # Continue to the existing summary page for now.
-        return redirect("core:summary")
+        return redirect("core:group_summary")
 
     return render(request, "core/activities.html")
 
