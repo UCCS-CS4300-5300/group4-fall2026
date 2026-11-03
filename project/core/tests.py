@@ -59,8 +59,8 @@ def test_user_add_dates():
     user.add_available_date_range(start, end)
     stored = user.available_ranges.get()
 
-    assert stored.startDate == start
-    assert stored.endDate == end
+    assert stored.start_date == start
+    assert stored.end_date == end
 
 @pytest.mark.django_db
 def test_user_remove_dates():
@@ -93,7 +93,7 @@ def test_set_date_range():
     start = date(2026, 10, 22)
     end = date(2026, 10, 23)
     dates.set_date_range(start, end)
-    assert (dates.startDate == start and dates.endDate == end)
+    assert (dates.start_date == start and dates.end_date == end)
 
 @pytest.mark.django_db
 def test_date_range_rejects_invalid_range():
