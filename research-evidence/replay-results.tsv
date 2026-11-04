@@ -1,4 +1,4 @@
-# Replay of every commit with the same method as the Milestone 1 baseline.
+# Replay of every commit with the same method as the Milestone 1 baseline (scripts/replay_tests.sh).
 # full_suite = pytest -q; ci_condition = makemigrations --check + pytest excluding the two live-AI tests.
 # Environment: Python 3.13, Django 5.2, pytest 8.4, no Ollama server.
 group	commit	migrations	full_suite	ci_condition_tests	ci_condition
@@ -30,7 +30,9 @@ sprint2	8b1b290	clean	12 failed, 34 passed, 21 skipped in 0.95s	12 failed, 34 pa
 sprint2	4ca0721	clean	14 failed, 37 passed, 21 skipped in 1.13s	12 failed, 37 passed, 21 skipped, 2 deselected in 0.92s	FAIL
 sprint2	1baabb7	clean	9 failed, 42 passed, 21 skipped in 1.64s	7 failed, 42 passed, 21 skipped, 2 deselected in 1.51s	FAIL
 main-tag	31f84a4	clean	9 failed, 42 passed, 21 skipped in 1.63s	7 failed, 42 passed, 21 skipped, 2 deselected in 1.46s	FAIL
-research	3d1deb0	clean	2 failed, 51 passed, 21 skipped in 0.83s	51 passed, 21 skipped, 2 deselected in 0.72s	PASS
-research	f9c9ad0	clean	2 failed, 51 passed, 21 skipped in 0.91s	51 passed, 21 skipped, 2 deselected in 0.79s	PASS
-research	d3ed04a	clean	2 failed, 51 passed, 21 skipped in 0.94s	51 passed, 21 skipped, 2 deselected in 0.63s	PASS
-research	1ef75dd	clean	2 failed, 51 passed, 21 skipped in 0.82s	51 passed, 21 skipped, 2 deselected in 0.71s	PASS
+research	596031b	clean	2 failed, 51 passed, 21 skipped in 0.87s	51 passed, 21 skipped, 2 deselected in 0.54s	PASS
+research	7924d0c	clean	2 failed, 51 passed, 21 skipped in 0.80s	51 passed, 21 skipped, 2 deselected in 0.66s	PASS
+research	12b5605	clean	2 failed, 51 passed, 21 skipped in 0.68s	51 passed, 21 skipped, 2 deselected in 0.55s	PASS
+research	807d531	clean	2 failed, 51 passed, 21 skipped in 0.77s	51 passed, 21 skipped, 2 deselected in 0.57s	PASS
+research	710ea34	clean	2 failed, 51 passed, 21 skipped in 0.73s	51 passed, 21 skipped, 2 deselected in 0.57s	PASS
+research	1bc1f8b	clean	2 failed, 51 passed, 21 skipped in 0.81s	51 passed, 21 skipped, 2 deselected in 0.66s	PASS
