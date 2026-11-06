@@ -1,4 +1,5 @@
 import pytest
+import ollama
 from django.urls import reverse
 from .models import StarterItem, Trip, User, DateRange, AILocation, AIActivities
 from datetime import date
@@ -141,7 +142,16 @@ def test_trip_access_user_attribute():
    assert returnAtt == "Quentin"
 
 @pytest.mark.django_db
-def test_destination_prompt():
+def test_destination_prompt(monkeypatch):
+   """The AI gets every member's destinations and the bolded city is parsed out.
+   ollama.chat is replaced by a fake, so no model server is needed (CI, Render)."""
+   sent = {}
+
+   def fake_chat(model, messages):
+      sent["messages"] = messages
+      return {"message": {"content": "**Los Angeles, California, USA**\nGreat weather and beaches."}}
+
+   monkeypatch.setattr(ollama, "chat", fake_chat)
    trip = Trip.objects.create(name="Winter break")
    user = User.objects.create(name="Quentin")
    user2 = User.objects.create(name="Bob")
@@ -151,10 +161,20 @@ def test_destination_prompt():
    trip.add_user(user)
    trip.add_user(user2)
    outLoc = trip.AIDest(parser)
-   assert "Los Angeles, California" in outLoc["Location"]
+   assert "Los Angeles, California" in sent["messages"][1]["content"]
+   assert outLoc["Location"] == "Los Angeles, California, USA"
 
 @pytest.mark.django_db
-def test_activities_prompt():
+def test_activities_prompt(monkeypatch):
+   """The AI gets the destination and every member's activities; replies are parsed.
+   ollama.chat is replaced by a fake, so no model server is needed (CI, Render)."""
+   sent = {}
+
+   def fake_chat(model, messages):
+      sent["messages"] = messages
+      return {"message": {"content": "1. **Mountain Biking, Ute Valley Park**\n2. **Concert, Pikes Peak Center**\n\nA good mix."}}
+
+   monkeypatch.setattr(ollama, "chat", fake_chat)
    trip = Trip.objects.create(name="Winter break")
    user = User.objects.create(name="Quentin")
    user2 = User.objects.create(name="Bob")
@@ -166,6 +186,10 @@ def test_activities_prompt():
    trip.add_user(user)
    trip.add_user(user2)
    outAct = trip.AIGetAct(parser, "Colorado Springs, USA")
+   prompt = sent["messages"][1]["content"]
+   assert "Colorado Springs, USA" in prompt
+   for activity in ["Mountain Biking", "Art Museum", "Concert"]:
+      assert activity in prompt
    assert "Mountain Biking" in outAct["Raw"]
 
 @pytest.mark.django_db
