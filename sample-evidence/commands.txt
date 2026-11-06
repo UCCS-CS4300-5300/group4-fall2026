@@ -1,0 +1,1 @@
+SYNTHETIC fixtures, not executed application commands
