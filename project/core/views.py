@@ -164,7 +164,7 @@ def summary(request):
         request,
         "core/summary.html",
         {
-            "summary": build_group_summary(User.objects.all()),
+            "summary": build_group_summary(User.objects.prefetch_related("available_ranges")),
             "trip_data": trip_data,
         },
     )

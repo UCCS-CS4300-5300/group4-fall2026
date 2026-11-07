@@ -1,0 +1,82 @@
+# Save as .github/workflows/quality.yml after adapting APP_PATH and setup below.
+name: Engineering quality
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+# REQUIRED: set to your project's existing tested Python version, not a new one.
+env:
+  PROJECT_PYTHON_VERSION: "3.12"
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    env:
+      APP_PATH: core # Relative to project/; adapt if the application adds packages.
+      DJANGO_SETTINGS_MODULE: config.quality_test_settings
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: ${{ env.PROJECT_PYTHON_VERSION }}
+      # Current five teams keep requirements.txt and manage.py inside project/.
+      - name: Install app dependencies and compatible quality tools
+        run: |
+          python -m pip install -r project/requirements.txt -r requirements-quality.txt
+          python -m pip check
+      - name: Test supplied reporter with mocks
+        run: python -m unittest discover -s tests -p test_quality_report.py -v
+      # Team 3: enable this block after repairing its package-lock.json/test path.
+      # - uses: actions/setup-node@v4
+      #   with:
+      #     node-version: '22.12.0'
+      # - name: Team 3 JavaScript checks
+      #   working-directory: project
+      #   run: |
+      #     npm ci
+      #     npm test
+      #     npm run build
+      - name: Collect real application evidence
+        working-directory: project
+        run: python ../scripts/collect_quality.py "$APP_PATH"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: quality-evidence
+          path: project/quality-evidence/
+          if-no-files-found: error
+  report:
+    # Automatic after successful evidence on main; PRs never call live AI.
+    if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: evidence
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      GATEWAY_URL: ${{ vars.COURSE_GATEWAY_URL }}
+      HUMAN_ISSUE: ${{ vars.QUALITY_REVIEW_ISSUE_URL }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: ${{ env.PROJECT_PYTHON_VERSION }}
+      # Reporter is standard-library only: no application dependency install here.
+      - uses: actions/download-artifact@v4
+        with:
+          name: quality-evidence
+          path: quality-evidence
+      - name: Generate bounded report with course gateway
+        run: python scripts/quality_report.py --evidence quality-evidence --output QUALITY_REPORT.md --human-issue "$HUMAN_ISSUE"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: engineering-quality-report
+          path: QUALITY_REPORT.md
+          if-no-files-found: error

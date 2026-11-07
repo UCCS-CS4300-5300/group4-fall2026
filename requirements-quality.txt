@@ -1,0 +1,6 @@
+# Extra CI tools; install together with project/requirements.txt.
+# Preserve the team's Django/pytest constraints. mutmut is intentionally separate.
+pytest-cov==6.2.1
+pylint==3.3.8
+pylint-django==2.6.1
+radon==6.0.1

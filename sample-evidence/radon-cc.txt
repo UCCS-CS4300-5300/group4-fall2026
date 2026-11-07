@@ -1,0 +1,1 @@
+SYNTHETIC: example function A (2)
