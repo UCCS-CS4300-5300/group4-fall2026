@@ -55,7 +55,7 @@ def test_user_remove_destinations():
 def test_user_add_dates():
     user = User.objects.create(name = "Jeremiah")
     start = date(2026, 10, 22)
-    end = date(2026, 10, 23)
+    end = date(2026, 10, 22)
 
     user.add_available_date_range(start, end)
     stored = user.available_ranges.get()
