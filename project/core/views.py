@@ -1,5 +1,5 @@
 from django.shortcuts import redirect, render
-from .models import StarterItem, User
+from .models import StarterItem, Trip
 from .models.trip import AISuggestion
 from .summary import build_group_summary
 
@@ -148,6 +148,16 @@ def activities(request):
 
 
 
+ACTIVE_TRIP_KEY = "active_trip_id"
+
+
+def active_trip(request):
+    """The trip set at login (session key active_trip_id), or None if unset or deleted."""
+    trip_id = request.session.get(ACTIVE_TRIP_KEY)
+    if trip_id is None:
+        return None
+    return Trip.objects.filter(pk=trip_id).first()
+
 
 def summary(request):
     trip_data = {
@@ -160,11 +170,18 @@ def summary(request):
         ),
     }
 
+    trip = active_trip(request)
+    group_summary = None
+    if trip is not None:
+        # Only this trip's members, with their date ranges fetched in one query.
+        group_summary = build_group_summary(trip.users.prefetch_related("available_ranges"))
+
     return render(
         request,
         "core/summary.html",
         {
-            "summary": build_group_summary(User.objects.prefetch_related("available_ranges")),
+            "trip": trip,
+            "summary": group_summary,
             "trip_data": trip_data,
         },
     )
