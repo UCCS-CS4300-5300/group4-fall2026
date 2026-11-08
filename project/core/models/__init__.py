@@ -4,5 +4,7 @@ from .user import User
 from .AILocation import AILocation
 from .AILocation import AIActivities
 from .user import DateRange
+from .ai_run import AIRun
 
 __all__ = ["StarterItem", "Trip", "User", "AILocation", "DateRange"]
+"AIRun"
