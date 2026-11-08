@@ -204,9 +204,9 @@ def ai_results(trip):
     The AI's latest results for trip, keyed by section.
 
     Each value is {"short": ..., "long": ...} (the answer and the AI's
-    explanation), or None if that part hasn't been generated. Only the
-    destination is stored today (AISuggestion); activities and budget are
-    filled in here once the AI saves them.
+    explanation), or None if that part hasn't been generated. The destination
+    is an AISuggestion; activities (and budget, once the AI produces it) are
+    saved on the trip's AIRun.
     """
     latest = trip.suggestions.order_by("-created_at", "-id").first()
     run = AIRun.objects.filter(trip=trip).first()
