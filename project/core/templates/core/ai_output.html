@@ -32,54 +32,73 @@
 
 <main class="max-w-[1040px] mx-auto px-5 sm:px-12 py-14">
 
-    <!-- PLACEHOLDER: shows stored AISuggestion rows only. It does not call the AI. -->
+        <!-- Reads saved AI results for the active trip only. It never calls the AI itself. -->
 
     <div class="max-w-[760px]">
 
         <div class="inline-flex items-center gap-2 rounded-full bg-purple/10
                     text-purple px-3 py-1.5 text-xs font-bold mb-5">
-            AI SUGGESTIONS · PLACEHOLDER
+            AI SUGGESTIONS
         </div>
 
         <h1 class="text-4xl sm:text-5xl font-bold tracking-[-.04em] leading-tight">
-            Suggested destinations
+            Your trip plan
         </h1>
 
-        <p class="mt-4 text-lg text-slate-500 leading-8">
-            This page shows AI suggestions that have already been saved. It's a
-            placeholder for testing and doesn't run the AI itself.
-        </p>
+        {% if trip %}
+            <p class="mt-4 text-lg text-slate-500 leading-8">
+                <strong class="text-ink">{{ trip.name }}</strong> ·
+                Suggestions based on everyone's combined answers.
+            </p>
+        {% endif %}
 
     </div>
 
 
-    {% if suggestions %}
+    {% if not trip %}
 
-        <ul class="mt-10 space-y-6">
-            {% for s in suggestions %}
-                <li class="bg-white rounded-[28px] shadow-soft border border-slate-100 p-8">
-                    <div class="flex flex-wrap items-baseline justify-between gap-3">
-                        <h2 class="text-2xl font-bold tracking-[-.02em]">{{ s.location }}</h2>
-                        <span class="text-sm text-slate-500">
-                            {{ s.trip.name }} · {{ s.created_at|date:"M j, Y g:i A" }}
-                        </span>
-                    </div>
-                    <p class="mt-4 text-slate-600 leading-7 whitespace-pre-line">{{ s.description }}</p>
-                </li>
-            {% endfor %}
-        </ul>
+        <div class="mt-10 bg-white rounded-[28px] shadow-soft border border-slate-100 p-10 text-center">
+            <p class="text-xl font-semibold">No trip selected</p>
+            <p class="mt-2 text-slate-500">
+                Start or join a trip by its name to see its AI suggestions.
+            </p>
+            <a href="{% url 'core:home' %}"
+               class="inline-block mt-6 px-7 py-3 rounded-xl bg-slate-900 text-white
+                      text-sm font-semibold hover:bg-slate-800 transition">
+                Start or join a trip →
+            </a>
+        </div>
 
     {% else %}
 
-        <div class="mt-10 bg-white rounded-[28px] shadow-soft border border-slate-100 p-10 text-center">
-            <p class="text-xl font-semibold">No AI suggestions yet</p>
-            <p class="mt-2 text-slate-500">
-                Saved suggestions will appear here once the AI has run for a trip.
-            </p>
+        <div class="mt-10 space-y-6">
+            {% for section in sections %}
+                <section id="ai-{{ section.key }}"
+                         class="bg-white rounded-[28px] shadow-soft border border-slate-100 p-8"
+                         aria-labelledby="ai-{{ section.key }}-heading">
+
+                    <h2 id="ai-{{ section.key }}-heading" class="text-xl font-bold">{{ section.title }}</h2>
+
+                    {% if section.result %}
+                        <!-- Short box: the answer itself -->
+                        <p class="mt-5 text-xs font-semibold text-slate-500">{{ section.short_label|upper }}</p>
+                        <div class="mt-2 rounded-2xl bg-slate-50 border border-slate-200 px-5 py-4
+                                    text-lg font-semibold">{{ section.result.short }}</div>
+
+                        <!-- Long box: the AI's explanation -->
+                        <p class="mt-5 text-xs font-semibold text-slate-500">WHY THE AI CHOSE THIS</p>
+                        <div class="mt-2 rounded-2xl bg-slate-50 border border-slate-200 px-5 py-4
+                                    text-slate-600 leading-7 whitespace-pre-line">{{ section.result.long }}</div>
+                    {% else %}
+                        <p class="mt-5 text-slate-500">Not generated yet.</p>
+                    {% endif %}
+
+                </section>
+            {% endfor %}
         </div>
 
     {% endif %}
-
+    
     <div class="mt-8">
         <a href="{% url 'core:summary' %}"
            class="px-5 py-3 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-100">
