@@ -1,0 +1,88 @@
+{% comment %}
+  AI progress indicator. Once the page has fully loaded, it asks the server to
+  start the AI (the server skips it if the results are already up to date),
+  then checks every few seconds until the run finishes.
+  Include with reload=True to reload the page when new results are ready.
+{% endcomment %}
+<div id="ai-progress" class="text-sm" aria-live="polite"
+     data-run-url="{% url 'core:ai_run' %}"
+     data-status-url="{% url 'core:ai_status' %}"
+     data-csrf="{{ csrf_token }}"
+     data-reload="{% if reload %}1{% endif %}">
+
+    {# No display classes on the data-state spans: they would override the hidden attribute. #}
+    <span data-state="running" hidden>
+        <span class="inline-flex items-center gap-2 text-slate-500">
+            <span class="inline-block h-4 w-4 rounded-full border-2 border-slate-300 border-t-purple animate-spin"
+                  aria-hidden="true"></span>
+            Generating AI suggestions… this can take a minute.
+        </span>
+    </span>
+
+    <span data-state="done" hidden class="text-emerald-700 font-medium">
+        AI suggestions are ready.
+    </span>
+
+    <span data-state="failed" hidden class="text-amber-700">
+        AI unavailable: <span data-error></span>
+        <button type="button" data-retry
+                class="ml-2 underline font-semibold hover:text-amber-900">Try again</button>
+    </span>
+</div>
+
+<script>
+(function () {
+    const box = document.getElementById("ai-progress");
+    const POLL_MS = 3000;
+
+    function show(name, error) {
+        box.querySelectorAll("[data-state]").forEach(function (el) {
+            el.hidden = el.dataset.state !== name;
+        });
+        if (error) box.querySelector("[data-error]").textContent = error;
+    }
+
+    function handle(state, wasRunning) {
+        if (state.status === "running") {
+            show("running");
+            setTimeout(poll, POLL_MS);
+        } else if (state.status === "done") {
+            if (wasRunning && box.dataset.reload) {
+                window.location.reload();
+            } else {
+                show(wasRunning || !box.dataset.reload ? "done" : "");
+            }
+        } else if (state.status === "failed") {
+            show("failed", state.error);
+        } else {
+            show("");
+        }
+    }
+
+    function poll() {
+        fetch(box.dataset.statusUrl, { headers: { "Accept": "application/json" } })
+            .then(function (r) { return r.json(); })
+            .then(function (state) { handle(state, true); })
+            .catch(function () { setTimeout(poll, POLL_MS); });
+    }
+
+    function start(retry) {
+        const body = new URLSearchParams();
+        if (retry) body.set("retry", "1");
+        fetch(box.dataset.runUrl, {
+            method: "POST",
+            headers: { "X-CSRFToken": box.dataset.csrf, "Accept": "application/json" },
+            body: body,
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (state) { handle(state, false); })
+            .catch(function () { show("failed", "Couldn't reach the server."); });
+    }
+
+    box.querySelector("[data-retry]").addEventListener("click", function () { start(true); });
+
+    // Wait until the page is fully rendered before asking for the AI.
+    if (document.readyState === "complete") start(false);
+    else window.addEventListener("load", function () { start(false); });
+})();
+</script>

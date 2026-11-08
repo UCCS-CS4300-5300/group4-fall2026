@@ -71,7 +71,11 @@
 
     {% else %}
 
-        <div class="mt-10 space-y-6">
+        <div class="mt-8">
+            {% include "core/_ai_progress.html" with reload=True %}
+        </div>
+
+        <div class="mt-6 space-y-6">
             {% for section in sections %}
                 <section id="ai-{{ section.key }}"
                          class="bg-white rounded-[28px] shadow-soft border border-slate-100 p-8"

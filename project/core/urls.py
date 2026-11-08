@@ -11,4 +11,6 @@ urlpatterns = [
     path("activities/", views.activities, name="activities"),
     path("summary/", views.summary, name="summary"),
     path("ai-output/", views.ai_output, name="ai_output"),
+    path("ai/run/", views.ai_run, name="ai_run"),
+    path("ai/status/", views.ai_status, name="ai_status"),
 ]
