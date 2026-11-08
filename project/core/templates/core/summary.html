@@ -115,21 +115,41 @@
             Here's where your group stands
         </h1>
 
-        <p class="mt-4 text-lg text-slate-500 leading-8">
-            {% if summary.member_count == 1 %}
-                1 member has submitted so far.
-            {% else %}
-                {{ summary.member_count }} members have submitted so far.
-            {% endif %}
-            Answers are combined, so no one's individual choices are shown.
-        </p>
+        {% if trip %}
+            <p class="mt-4 text-lg text-slate-500 leading-8">
+                <strong class="text-ink">{{ trip.name }}</strong> ·
+                {% if summary.member_count == 1 %}
+                    1 member has submitted so far.
+                {% else %}
+                    {{ summary.member_count }} members have submitted so far.
+                {% endif %}
+                Answers are combined, so no one's individual choices are shown.
+            </p>
+        {% endif %}
 
     </div>
 
 
-    {% if not summary.member_count %}
+    {% if not trip %}
 
-        <!-- Empty state -->
+        <!-- No active trip: nothing to summarize until someone starts or joins one -->
+
+        <div class="mt-10 bg-white rounded-[28px] shadow-soft border border-slate-100 p-10 text-center">
+            <p class="text-xl font-semibold">No trip selected</p>
+            <p class="mt-2 text-slate-500">
+                Start or join a trip by its name to see your group's summary.
+            </p>
+            <a href="{% url 'core:home' %}"
+               class="inline-block mt-6 px-7 py-3 rounded-xl bg-slate-900 text-white
+                      text-sm font-semibold hover:bg-slate-800 transition">
+                Start or join a trip →
+            </a>
+        </div>
+
+
+    {% elif not summary.member_count %}
+
+        <!-- Empty state -->s
 
         <div class="mt-10 bg-white rounded-[28px] shadow-soft border border-slate-100 p-10 text-center">
             <p class="text-xl font-semibold">No submissions yet</p>
