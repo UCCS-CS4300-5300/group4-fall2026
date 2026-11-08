@@ -15,7 +15,7 @@ from datetime import timedelta
 from django.db import connections, transaction
 from django.utils import timezone
 
-from .models import AIActivities, AILocation, AIRun
+from .models import AIParser, AIRun
 from .models.trip import AISuggestion
 
 log = logging.getLogger(__name__)
@@ -132,7 +132,7 @@ def run_ai(run_id):
     run = AIRun.objects.select_related("trip").get(pk=run_id)
     trip = run.trip
     try:
-        dest = trip.AIDest(AILocation())
+        dest = trip.AIDest(AIParser())
         location = dest["Location"].strip()
         AISuggestion.objects.create(
             trip=trip, location=location, description=_explanation(dest["Raw"])
@@ -140,7 +140,7 @@ def run_ai(run_id):
 
         results = {}
         try:
-            acts = trip.AIGetAct(AIActivities(), location)
+            acts = trip.AIGetAct(AIParser(), location)
         except ValueError:
             acts = None  # no member listed any activities, so there is nothing to suggest
         if acts:

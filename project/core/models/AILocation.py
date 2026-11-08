@@ -6,12 +6,16 @@ import ollama
 from django.conf import settings
 from django.db import models
 
-class AILocation(models.Model):
+class AIParser(models.Model):
     #Parameters are created as empty strings on startup so the data fields can still be referenced in views
     location = ""
-    rawOutput = ""
+    activities = []
+    rawLocation = ""
+    rawActivities = ""
+    budget = ""
+    rawBudget = ""
 
-    def giveSuggestion(self, destIn):
+    def giveLocation(self, destIn):
         #Define the parameters of the system's behavior
         system_msg = ("You are a trip advisor suggesting a vacation location to a group with varying preferences."
               "Given a list of locations, suggest exactly one potential vacation destination based on characteristics such as weather and nearby activities"
@@ -37,17 +41,14 @@ class AILocation(models.Model):
         )
 
         #Get the message from the response and parse the location as a string
-        self.rawOutput = resp["message"]["content"]
-        self.location = self.rawOutput.split("**")[1]
+        self.rawLocation = resp["message"]["content"]
+        self.location = self.rawLocation.split("**")[1]
 
         #Return self.location for convenience in testing
-        return {"Location":self.location, "Raw":self.rawOutput}
+        return {"Location":self.location, "Raw":self.rawLocation}
 
-class AIActivities(models.Model):
-    activities = []
-    rawOutput = ""
 
-    def giveSuggestion(self, destIn, actIn):
+    def giveActivities(self, destIn, actIn):
         #Define the parameters of the system's behavior
         system_msg = ("You are a trip advisor suggesting a set of activities to a group with varying preferences."
             "The group has chosen a location for travel and would like you to suggest specific activities within or near that location."
@@ -74,12 +75,12 @@ class AIActivities(models.Model):
         )
 
         #Get the message from the response and parse the location as an array of strings
-        self.rawOutput = resp["message"]["content"]
+        self.rawActivities = resp["message"]["content"]
         self.activities = []
-        entries = self.rawOutput.split("**")
+        entries = self.rawActivities.split("**")
         for i, con in enumerate(entries):
             if i==1 or i==3 or i==5:
                 self.activities.append(con)
 
         #Return object variables for convenience in testing
-        return {"Activities":self.activities, "Raw":self.rawOutput}
+        return {"Activities":self.activities, "Raw":self.rawActivities}

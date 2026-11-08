@@ -1,7 +1,7 @@
 import pytest
 import ollama
 from django.urls import reverse
-from .models import StarterItem, Trip, User, DateRange, AILocation, AIActivities
+from .models import StarterItem, Trip, User, DateRange, AIParser
 from datetime import date
 
 @pytest.mark.django_db
@@ -157,7 +157,7 @@ def test_destination_prompt(monkeypatch):
    user2 = User.objects.create(name="Bob")
    user.add_destination("Los Angeles, California")
    user2.add_destination("Los Angeles, California")
-   parser = AILocation.objects.create()
+   parser = AIParser.objects.create()
    trip.add_user(user)
    trip.add_user(user2)
    outLoc = trip.AIDest(parser)
@@ -182,7 +182,7 @@ def test_activities_prompt(monkeypatch):
    user2.add_activity("Mountain Biking")
    user2.add_activity("Art Museum")
    user2.add_activity("Concert")
-   parser = AIActivities.objects.create()
+   parser = AIParser.objects.create()
    trip.add_user(user)
    trip.add_user(user2)
    outAct = trip.AIGetAct(parser, "Colorado Springs, USA")
@@ -199,7 +199,7 @@ def test_empty_location_suggestions_rejected():
    user2 = User.objects.create(name="Bob")
    trip.add_user(user)
    trip.add_user(user2)
-   parser = AIActivities.objects.create()
+   parser = AIParser.objects.create()
    with pytest.raises(ValueError): trip.AIDest(parser)
 
 @pytest.mark.django_db
@@ -209,7 +209,7 @@ def test_empty_activity_suggestions_rejected():
    user2 = User.objects.create(name="Bob")
    trip.add_user(user)
    trip.add_user(user2)
-   parser = AIActivities.objects.create()
+   parser = AIParser.objects.create()
    with pytest.raises(ValueError): trip.AIGetAct(parser, "Colorado Springs, USA")
 
 @pytest.mark.django_db

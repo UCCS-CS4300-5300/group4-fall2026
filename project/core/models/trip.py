@@ -53,7 +53,7 @@ class Trip(models.Model):
                 dest.append(j)
         if dest==[]:
             raise ValueError("No destination suggestions")
-        return parser.giveSuggestion(dest)
+        return parser.giveLocation(dest)
 
     def AIGetAct(self, parser=None, inDest=None):
             if parser == None:
@@ -67,7 +67,7 @@ class Trip(models.Model):
                     act.append(j)
             if act==[]:
                 raise ValueError("No activity suggestions")
-            return parser.giveSuggestion(inDest, act)
+            return parser.giveActivities(inDest, act)
 
     def _require_user(self, user):
         if user.pk is None or not self.users.filter(pk=user.pk).exists():
