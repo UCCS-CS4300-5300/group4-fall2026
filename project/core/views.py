@@ -1,5 +1,9 @@
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
-from .models import StarterItem, Trip
+from django.views.decorators.http import require_GET, require_POST
+
+from . import ai_runner
+from .models import AIRun, StarterItem, Trip
 from .summary import build_group_summary
 
 
@@ -205,10 +209,12 @@ def ai_results(trip):
     filled in here once the AI saves them.
     """
     latest = trip.suggestions.order_by("-created_at", "-id").first()
+    run = AIRun.objects.filter(trip=trip).first()
+    extra = run.results if run else {}
     return {
         "destination": {"short": latest.location, "long": latest.description} if latest else None,
-        "activities": None,
-        "budget": None,
+        "activities": extra.get("activities"),
+        "budget": extra.get("budget"),
     }
 
 
@@ -223,3 +229,27 @@ def ai_output(request):
             for key, title, label in AI_SECTIONS
         ]
     return render(request, "core/ai_output.html", {"trip": trip, "sections": sections})
+
+
+
+
+def _no_trip():
+    return JsonResponse({"status": "no_trip", "error": "No trip selected."}, status=400)
+
+
+@require_POST
+def ai_run(request):
+    """Start the active trip's AI in the background if its answers changed. Returns JSON state."""
+    trip = active_trip(request)
+    if trip is None:
+        return _no_trip()
+    return JsonResponse(ai_runner.start(trip, retry=request.POST.get("retry") == "1"))
+
+
+@require_GET
+def ai_status(request):
+    """The active trip's AI state as JSON, for pages that are waiting on a run."""
+    trip = active_trip(request)
+    if trip is None:
+        return _no_trip()
+    return JsonResponse(ai_runner.state(trip))
