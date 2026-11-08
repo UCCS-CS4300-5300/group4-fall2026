@@ -1,6 +1,5 @@
 from django.shortcuts import redirect, render
 from .models import StarterItem, Trip
-from .models.trip import AISuggestion
 from .summary import build_group_summary
 
 
@@ -188,10 +187,39 @@ def summary(request):
 
 
 
+# The three parts of the AI's answer, in page order: (key, heading, short-box label).
+AI_SECTIONS = [
+    ("destination", "Destination", "Suggested destination"),
+    ("activities", "Activities", "Suggested activities"),
+    ("budget", "Budget", "Budget plan"),
+]
+
+
+def ai_results(trip):
+    """
+    The AI's latest results for trip, keyed by section.
+
+    Each value is {"short": ..., "long": ...} (the answer and the AI's
+    explanation), or None if that part hasn't been generated. Only the
+    destination is stored today (AISuggestion); activities and budget are
+    filled in here once the AI saves them.
+    """
+    latest = trip.suggestions.order_by("-created_at", "-id").first()
+    return {
+        "destination": {"short": latest.location, "long": latest.description} if latest else None,
+        "activities": None,
+        "budget": None,
+    }
+
+
 def ai_output(request):
-    """
-    PLACEHOLDER for testing: lists saved AI suggestions, newest first.
-    Nothing here calls the model; it only shows what is already stored.
-    """
-    suggestions = AISuggestion.objects.select_related("trip").order_by("-created_at", "-id")
-    return render(request, "core/ai_output.html", {"suggestions": suggestions})
+    """Shows the active trip's AI suggestions. Only reads saved results; never calls the model."""
+    trip = active_trip(request)
+    sections = []
+    if trip is not None:
+        results = ai_results(trip)
+        sections = [
+            {"key": key, "title": title, "short_label": label, "result": results[key]}
+            for key, title, label in AI_SECTIONS
+        ]
+    return render(request, "core/ai_output.html", {"trip": trip, "sections": sections})
