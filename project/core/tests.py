@@ -25,11 +25,11 @@ def test_trip_stores_metadata_ai_output_and_users():
  assert set(trip.users.all())=={first_user,second_user}
 @pytest.mark.django_db
 def test_home(client):
- r=client.get(reverse("core:home")); assert r.status_code==200; assert b"Your trip starts here." in r.content
-@pytest.mark.django_db
-def test_only_active(client):
- StarterItem.objects.create(title="Visible",is_active=True); StarterItem.objects.create(title="Hidden",is_active=False)
- r=client.get(reverse("core:home")); assert b"Visible" in r.content; assert b"Hidden" not in r.content
+ """The start page offers to create a trip and links to joining one."""
+ r=client.get(reverse("core:home")); assert r.status_code==200
+ assert b"Plan a trip together" in r.content
+ assert b'name="tripName"' in r.content and b'name="personName"' in r.content
+ assert reverse("core:join_trip").encode() in r.content
 
 
 @pytest.mark.django_db
@@ -230,7 +230,16 @@ def test_user_budget_update():
    assert returnAtt == 1000
 
 @pytest.mark.django_db
-def test_budget_prompt():
+def test_budget_prompt(monkeypatch):
+   """The AI gets the destination, activities and budget; the bolded total is parsed.
+   ollama.chat is replaced by a fake, so no model server is needed (CI, Render)."""
+   sent = {}
+
+   def fake_chat(model, messages):
+      sent["messages"] = messages
+      return {"message": {"content": "**TOTAL TRIP COST: $1,500**\nFlights and hotel fit the budget."}}
+
+   monkeypatch.setattr(ollama, "chat", fake_chat)
    trip = Trip.objects.create(name="Winter break")
    parser = AIParser.objects.create()
    user = User.objects.create(name="Quentin")
@@ -246,4 +255,7 @@ def test_budget_prompt():
    trip.add_user(user)
    trip.add_user(user2)
    outBudget = trip.AIGetBudget(parser, "Colorado Springs, USA", ["Hiking", "Skiing", "Shopping"], 1500)
+   prompt = sent["messages"][1]["content"]
+   assert "Colorado Springs, USA" in prompt and "Skiing" in prompt and "1500" in prompt
    assert "$1,500" in outBudget["Raw"]
+   assert outBudget["Budget"] == "1500"
