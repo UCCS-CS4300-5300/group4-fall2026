@@ -1,130 +1,84 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trip Login</title>
-
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .login-container {
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 350px;
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 30px;
-            color: #333;
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #444;
-            font-weight: bold;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #4a90e2;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #4a90e2;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #357abd;
-        }
-
-        .starter-items {
-            margin-top: 25px;
-        }
-
-        .starter-item {
-            padding: 10px;
-            margin-bottom: 8px;
-            background-color: #f4f4f4;
-            border-radius: 6px;
-            color: #333;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Create a Trip</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body>
+<body class="min-h-screen bg-[#F7F7FB] flex items-center justify-center p-6">
 
-    <div class="login-container">
-        <h1>Your trip starts here.</h1>
+<div class="bg-white rounded-3xl shadow-lg p-10 w-full max-w-lg">
 
-        <form action="{% url 'core:destination' %}" method="post">
-            {% csrf_token %}
+    <h1 class="text-3xl font-bold mb-3">
+        Plan a trip together
+    </h1>
 
-            <div class="input-group">
-                <label for="tripName">Trip Name</label>
-                <input
-                    type="text"
-                    id="tripName"
-                    name="tripName"
-                    placeholder="Enter trip name"
-                    required
-                >
-            </div>
+    <p class="text-slate-500 mb-8">
+        Create a trip and invite your friends to contribute.
+    </p>
 
-            <div class="input-group">
-                <label for="personName">Your Name</label>
-                <input
-                    type="text"
-                    id="personName"
-                    name="personName"
-                    placeholder="Enter your name"
-                    required
-                >
-            </div>
-
-            <button type="submit">Continue</button>
-        </form>
-
-        <div class="starter-items">
-            {% for item in items %}
-                <div class="starter-item">{{ item.title }}</div>
-            {% endfor %}
+    {% if error %}
+        <div class="bg-red-100 text-red-700 p-3 rounded-xl mb-5">
+            {{ error }}
         </div>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <label class="block font-semibold mb-2">
+            Trip name
+        </label>
+
+        <input
+            type="text"
+            name="tripName"
+            maxlength="120"
+            required
+            placeholder="e.g. Summer in Europe"
+            class="w-full border rounded-xl p-4 mb-5"
+        >
+
+        <label class="block font-semibold mb-2">
+            Your name
+        </label>
+
+        <input
+            type="text"
+            name="personName"
+            maxlength="50"
+            required
+            placeholder="Enter your name"
+            class="w-full border rounded-xl p-4 mb-6"
+        >
+
+        <button
+            type="submit"
+            class="w-full bg-[#635BFF] text-white rounded-xl p-4 font-semibold"
+        >
+            Create trip
+        </button>
+    </form>
+
+    <div class="border-t mt-8 pt-6 text-center">
+
+        <p class="text-slate-500 mb-3">
+            Already invited to a trip?
+        </p>
+
+        <a
+            href="{% url 'core:join_trip' %}"
+            class="text-[#635BFF] font-semibold hover:underline"
+        >
+            Join an existing trip →
+        </a>
 
     </div>
+
+</div>
 
 </body>
 </html>

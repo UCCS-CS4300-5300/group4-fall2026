@@ -1,335 +1,311 @@
+
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Trip Planner - Group Summary</title>
-
-    <!-- Tailwind -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Group Trip Summary</title>
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        purple: "#635BFF",
-                        ink: "#18181B"
-                    },
-                    boxShadow: {
-                        soft: "0 10px 30px rgba(0,0,0,0.06)"
-                    }
-                }
-            }
-        }
-    </script>
 </head>
 
+<body class="min-h-screen bg-[#F7F7FB] p-6">
 
-<body class="min-h-screen bg-[#F7F7FB] text-ink">
+<main class="max-w-5xl mx-auto">
+	<div class="mb-5">
+    <a
+        href="{% url 'core:home' %}"
+        class="inline-flex items-center gap-2 text-[#635BFF] font-semibold hover:text-purple-800 transition"
+    >
+        ← Back to Trip Login
+    </a>
+</div>
 
-<main class="max-w-[1040px] mx-auto px-5 sm:px-12 py-14">
+    <div class="bg-white rounded-3xl p-8 shadow-sm">
 
-    
-<section class="mb-8 bg-white rounded-[28px] shadow-soft border border-slate-100 p-8">
-    <h2 class="text-2xl font-bold">Your Trip Summary</h2>
-
-    {% if request.session.trip_name %}
-        <p class="mt-4">
-            <strong>Trip:</strong> {{ request.session.trip_name }}
+        <p class="text-sm font-bold text-[#635BFF]">
+            GROUP TRIP SUMMARY
         </p>
-    {% endif %}
 
-    {% if request.session.person_name %}
-        <p class="mt-2">
-            <strong>Traveler:</strong> {{ request.session.person_name }}
-        </p>
-    {% endif %}
-
-    <h3 class="mt-6 font-bold">Destinations</h3>
-    <ul class="mt-2 list-disc pl-6">
-        {% for destination in trip_data.destinations %}
-            <li>{{ destination }}</li>
-        {% empty %}
-            <li>No destinations selected.</li>
-        {% endfor %}
-    </ul>
-
-    <h3 class="mt-6 font-bold">Schedule</h3>
-    <p class="mt-2">
-        Start: {{ trip_data.schedule.start_date|default:"Not provided" }}
-    </p>
-    <p>
-        End: {{ trip_data.schedule.end_date|default:"Not provided" }}
-    </p>
-    <p>
-        Pace: {{ trip_data.schedule.pace|default:"Not provided" }}
-    </p>
-    <p>
-        Daily hours:
-        {{ trip_data.schedule.day_start|default:"Not provided" }}
-        – {{ trip_data.schedule.day_end|default:"Not provided" }}
-    </p>
-
-    <h3 class="mt-6 font-bold">Budget</h3>
-    {% if trip_data.budget.amount %}
-        <p class="mt-2">
-            {{ trip_data.budget.amount }}
-            {{ trip_data.budget.currency }}
-        </p>
-    {% else %}
-        <p class="mt-2">No budget entered.</p>
-    {% endif %}
-
-    <h3 class="mt-6 font-bold">Activities</h3>
-    <ul class="mt-2 list-disc pl-6">
-        {% for activity in trip_data.activities %}
-            <li>{{ activity }}</li>
-        {% empty %}
-            <li>No activities selected.</li>
-        {% endfor %}
-    </ul>
-
-    {% if trip_data.additional_notes %}
-        <h3 class="mt-6 font-bold">Additional Notes</h3>
-        <p class="mt-2 whitespace-pre-wrap">{{ trip_data.additional_notes }}</p>
-    {% endif %}
-</section>
-
-    
-   
-
-
-    <!-- Heading -->
-
-    <div class="max-w-[760px]">
-
-        <div class="inline-flex items-center gap-2 rounded-full bg-purple/10
-                    text-purple px-3 py-1.5 text-xs font-bold mb-5">
-            GROUP SUMMARY
-        </div>
-
-        <h1 class="text-4xl sm:text-5xl font-bold tracking-[-.04em] leading-tight">
-            Here's where your group stands
+        <h1 class="text-4xl font-bold mt-2">
+            {{ trip.name }}
         </h1>
 
-        {% if trip %}
-            <p class="mt-4 text-lg text-slate-500 leading-8">
-                <strong class="text-ink">{{ trip.name }}</strong> ·
-                {% if summary.member_count == 1 %}
-                    1 member has submitted so far.
-                {% else %}
-                    {{ summary.member_count }} members have submitted so far.
-                {% endif %}
-                Answers are combined, so no one's individual choices are shown.
+        <p class="text-slate-500 mt-3">
+            Your group's preferences have been collected.
+        </p>
+
+        <div class="mt-6 bg-purple-50 rounded-xl p-5">
+
+            <p class="text-sm text-slate-500">
+                Invitation code
             </p>
-        {% endif %}
+
+            <div class="flex justify-between items-center mt-2">
+
+                <span class="text-2xl font-bold tracking-widest text-[#635BFF]">
+                    {{ trip.invite_code }}
+                </span>
+
+                <button
+                    onclick="navigator.clipboard.writeText('{{ trip.invite_code }}')"
+                    class="bg-white border rounded-lg px-4 py-2"
+                >
+                    Copy
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+
+            <div class="bg-slate-50 rounded-xl p-5">
+                <p class="text-sm text-slate-500">Participants</p>
+                <p class="text-3xl font-bold">
+                    {{ summary.member_count }}
+                </p>
+            </div>
+
+            <div class="bg-slate-50 rounded-xl p-5">
+                <p class="text-sm text-slate-500">Destination responses</p>
+                <p class="text-3xl font-bold">
+                    {{ summary.submitted_preferences.destinations }}
+                </p>
+            </div>
+
+            <div class="bg-slate-50 rounded-xl p-5">
+                <p class="text-sm text-slate-500">Activity responses</p>
+                <p class="text-3xl font-bold">
+                    {{ summary.submitted_preferences.activities }}
+                </p>
+            </div>
+
+            <div class="bg-slate-50 rounded-xl p-5">
+                <p class="text-sm text-slate-500">Budget responses</p>
+                <p class="text-3xl font-bold">
+                    {{ summary.submitted_preferences.budgets }}
+                </p>
+            </div>
+
+        </div>
 
     </div>
 
 
-    {% if not trip %}
+    <!-- DESTINATIONS -->
 
-        <!-- No active trip: nothing to summarize until someone starts or joins one -->
+    <section class="bg-white rounded-3xl p-8 shadow-sm mt-6">
 
-        <div class="mt-10 bg-white rounded-[28px] shadow-soft border border-slate-100 p-10 text-center">
-            <p class="text-xl font-semibold">No trip selected</p>
-            <p class="mt-2 text-slate-500">
-                Start or join a trip by its name to see your group's summary.
+        <h2 class="text-2xl font-bold mb-5">
+            Preferred destinations
+        </h2>
+
+        {% for destination in summary.destinations %}
+
+            <div class="flex justify-between border-b py-4">
+
+                <span class="font-medium">
+                    📍 {{ destination.name }}
+                </span>
+
+                <span class="text-slate-500">
+                    {{ destination.count }} / {{ summary.member_count }} people
+                </span>
+
+            </div>
+
+        {% empty %}
+
+            <p class="text-slate-400">
+                No destinations submitted yet.
             </p>
-            <a href="{% url 'core:home' %}"
-               class="inline-block mt-6 px-7 py-3 rounded-xl bg-slate-900 text-white
-                      text-sm font-semibold hover:bg-slate-800 transition">
-                Start or join a trip →
-            </a>
-        </div>
+
+        {% endfor %}
+
+    </section>
 
 
-    {% elif not summary.member_count %}
+    <!-- ACTIVITIES -->
 
-        <!-- Empty state -->
+    <section class="bg-white rounded-3xl p-8 shadow-sm mt-6">
 
-        <div class="mt-10 bg-white rounded-[28px] shadow-soft border border-slate-100 p-10 text-center">
-            <p class="text-xl font-semibold">No submissions yet</p>
-            <p class="mt-2 text-slate-500">
-                The summary fills in as members add their destinations, dates, budget and activities.
+        <h2 class="text-2xl font-bold mb-5">
+            Preferred activities
+        </h2>
+
+        {% for activity in summary.activities %}
+
+            <div class="flex justify-between border-b py-4">
+
+                <span class="font-medium">
+                    {{ activity.name }}
+                </span>
+
+                <span class="text-slate-500">
+                    {{ activity.count }} people
+                </span>
+
+            </div>
+
+        {% empty %}
+
+            <p class="text-slate-400">
+                No activities submitted yet.
             </p>
-            <a href="{% url 'core:home' %}"
-               class="inline-block mt-6 px-7 py-3 rounded-xl bg-slate-900 text-white
-                      text-sm font-semibold hover:bg-slate-800 transition">
-                Add your preferences →
-            </a>
-        </div>
 
-    {% else %}
+        {% endfor %}
 
-        <div class="mt-10 grid gap-6 md:grid-cols-2">
-
-            <!-- Destinations -->
-
-            <section class="bg-white rounded-[28px] shadow-soft border border-slate-100 p-8 md:col-span-2"
-                     aria-labelledby="destinations-heading">
-
-                <h2 id="destinations-heading" class="text-xl font-bold">Destinations</h2>
-                <p class="mt-1 text-sm text-slate-500">Ranked by how many members suggested each place.</p>
-
-                {% if summary.destinations %}
-                    <ul class="mt-6 space-y-4">
-                        {% for d in summary.destinations %}
-                            <li>
-                                <div class="flex items-baseline justify-between gap-4">
-                                    <span class="font-semibold">{{ d.name }}</span>
-                                    <span class="text-sm text-slate-500 whitespace-nowrap">
-                                        {{ d.count }} of {{ summary.member_count }}
-                                    </span>
-                                </div>
-                                <div class="mt-2 h-2 rounded-full bg-slate-100 overflow-hidden">
-                                    <div class="h-full rounded-full bg-purple"
-                                         style="width: {% widthratio d.count summary.member_count 100 %}%"></div>
-                                </div>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p class="mt-6 text-slate-500">No destinations suggested yet.</p>
-                {% endif %}
-
-            </section>
+    </section>
 
 
-            <!-- Availability -->
+    <!-- AVAILABILITY -->
 
-            <section class="bg-white rounded-[28px] shadow-soft border border-slate-100 p-8"
-                     aria-labelledby="dates-heading">
+    <section class="bg-white rounded-3xl p-8 shadow-sm mt-6">
 
-                <h2 id="dates-heading" class="text-xl font-bold">Availability</h2>
+        <h2 class="text-2xl font-bold mb-3">
+            Group availability
+        </h2>
 
-                {% with a=summary.availability %}
-                    {% if not a.responded %}
-                        <p class="mt-6 text-slate-500">No one has added dates yet.</p>
-                    {% else %}
-                        <p class="mt-1 text-sm text-slate-500">
-                            Based on {{ a.responded }} of {{ summary.member_count }} members who added dates.
-                        </p>
+        <p class="text-sm text-slate-500 mb-5">
+            {{ summary.availability.responded }}
+            participants submitted availability.
+        </p>
 
-                        {% if a.common %}
-                            <p class="mt-6 text-sm font-semibold text-emerald-700">
-                                Everyone who added dates is free on:
-                            </p>
-                            <ul class="mt-3 flex flex-wrap gap-2">
-                                {% for run in a.common_ranges %}
-                                    <li class="rounded-full bg-emerald-50 text-emerald-800 px-3 py-1.5 text-sm font-medium">
-                                        {% if run.days == 1 %}
-                                            {{ run.start|date:"D, M j, Y" }}
-                                        {% else %}
-                                            {{ run.start|date:"M j" }} – {{ run.end|date:"M j, Y" }} ({{ run.days }} days)
-                                        {% endif %}
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        {% else %}
-                            <p class="mt-6 text-sm font-semibold text-amber-700">
-                                No date works for everyone yet.
-                            </p>
-                            <p class="mt-3 text-sm text-slate-500">Dates with the most people free:</p>
-                            <ul class="mt-3 space-y-2">
-                                {% for b in a.best %}
-                                    <li class="flex justify-between text-sm">
-                                        <span>{{ b.date|date:"D, M j, Y" }}</span>
-                                        <span class="text-slate-500">{{ b.count }} of {{ a.responded }} free</span>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    {% endif %}
-                {% endwith %}
+        <h3 class="font-semibold mb-3">
+            Dates everyone who responded can travel
+        </h3>
 
-            </section>
+        {% for period in summary.availability.common_ranges %}
 
+            <div class="bg-green-50 rounded-xl p-4 mb-3">
 
-            <!-- Budget -->
+                <p class="font-semibold text-green-800">
+                    {{ period.start|date:"M d, Y" }}
+                    –
+                    {{ period.end|date:"M d, Y" }}
+                </p>
 
-            <section class="bg-white rounded-[28px] shadow-soft border border-slate-100 p-8"
-                     aria-labelledby="budget-heading">
+                <p class="text-sm text-green-700">
+                    {{ period.days }} days
+                </p>
 
-                <h2 id="budget-heading" class="text-xl font-bold">Budget</h2>
+            </div>
 
-                {% with b=summary.budget %}
-                    {% if not b.responded %}
-                        <p class="mt-6 text-slate-500">No one has added a budget yet.</p>
-                    {% else %}
-                        <p class="mt-1 text-sm text-slate-500">
-                            Based on {{ b.responded }} of {{ summary.member_count }} members who added a budget.
-                        </p>
+        {% empty %}
 
-                        <dl class="mt-6 grid grid-cols-2 gap-4">
-                            <div class="rounded-2xl bg-slate-50 p-4">
-                                <dt class="text-xs font-semibold text-slate-500">RANGE</dt>
-                                <dd class="mt-1 font-bold">${{ b.min|floatformat:0 }} – ${{ b.max|floatformat:0 }}</dd>
-                            </div>
-                            <div class="rounded-2xl bg-slate-50 p-4">
-                                <dt class="text-xs font-semibold text-slate-500">MEDIAN</dt>
-                                <dd class="mt-1 font-bold">${{ b.median|floatformat:0 }}</dd>
-                            </div>
-                            <div class="rounded-2xl bg-slate-50 p-4 col-span-2">
-                                <dt class="text-xs font-semibold text-slate-500">AVERAGE</dt>
-                                <dd class="mt-1 font-bold">${{ b.average|floatformat:2 }}</dd>
-                            </div>
-                        </dl>
+            <p class="text-slate-400">
+                No common availability found yet.
+            </p>
 
-                        {% if b.below or b.above %}
-                            <p class="mt-5 text-sm text-amber-700">
-                                {% if b.below %}{{ b.below }} member{{ b.below|pluralize }} {{ b.below|pluralize:"has a budget,have budgets" }} well below the group's.{% endif %}
-                                {% if b.above %}{{ b.above }} member{{ b.above|pluralize }} {{ b.above|pluralize:"has a budget,have budgets" }} well above the group's.{% endif %}
-                                Worth keeping in mind when picking a place.
-                            </p>
-                        {% elif not b.outliers_checked %}
-                            <p class="mt-5 text-xs text-slate-400">
-                                Budget outliers are flagged once at least 3 members add a budget.
-                            </p>
-                        {% endif %}
-                    {% endif %}
-                {% endwith %}
+        {% endfor %}
 
-            </section>
+        <h3 class="font-semibold mt-8 mb-3">
+            Most popular dates
+        </h3>
+
+        {% for day in summary.availability.best %}
+
+            <div class="flex justify-between border-b py-3">
+
+                <span>
+                    {{ day.date|date:"M d, Y" }}
+                </span>
+
+                <span class="text-slate-500">
+                    {{ day.count }} participants
+                </span>
+
+            </div>
+
+        {% empty %}
+
+            <p class="text-slate-400">
+                No availability submitted yet.
+            </p>
+
+        {% endfor %}
+
+    </section>
 
 
-            <!-- Activities -->
+    <!-- BUDGET -->
 
-            <section class="bg-white rounded-[28px] shadow-soft border border-slate-100 p-8 md:col-span-2"
-                     aria-labelledby="activities-heading">
+    <section class="bg-white rounded-3xl p-8 shadow-sm mt-6">
 
-                <h2 id="activities-heading" class="text-xl font-bold">Activities</h2>
-                <p class="mt-1 text-sm text-slate-500">Everything the group wants to do, most popular first.</p>
+        <h2 class="text-2xl font-bold mb-5">
+            Group budget
+        </h2>
 
-                {% if summary.activities %}
-                    <ul class="mt-6 flex flex-wrap gap-2">
-                        {% for act in summary.activities %}
-                            <li class="rounded-full border border-slate-200 px-4 py-2 text-sm">
-                                {{ act.name }}
-                                <span class="ml-1 text-slate-400">×{{ act.count }}</span>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p class="mt-6 text-slate-500">No activities added yet.</p>
-                {% endif %}
+        {% if summary.budget.responded %}
 
-            </section>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
 
-        </div>
+                <div class="bg-slate-50 rounded-xl p-4">
+                    <p class="text-sm text-slate-500">Minimum</p>
+                    <p class="text-xl font-bold">
+                        {{ summary.budget.min }}
+                    </p>
+                </div>
 
-        <div class="mt-8 flex flex-wrap items-center justify-end gap-4">
-            {% include "core/_ai_progress.html" %}
-            <a href="{% url 'core:ai_output' %}"
-               class="px-7 py-3 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 transition">
-                See AI suggestions →
-            </a>
-        </div>
+                <div class="bg-slate-50 rounded-xl p-4">
+                    <p class="text-sm text-slate-500">Maximum</p>
+                    <p class="text-xl font-bold">
+                        {{ summary.budget.max }}
+                    </p>
+                </div>
 
-    {% endif %}
+                <div class="bg-slate-50 rounded-xl p-4">
+                    <p class="text-sm text-slate-500">Average</p>
+                    <p class="text-xl font-bold">
+                        {{ summary.budget.average }}
+                    </p>
+                </div>
+
+                <div class="bg-slate-50 rounded-xl p-4">
+                    <p class="text-sm text-slate-500">Median</p>
+                    <p class="text-xl font-bold">
+                        {{ summary.budget.median }}
+                    </p>
+                </div>
+
+            </div>
+
+        {% else %}
+
+            <p class="text-slate-400">
+                No budgets submitted yet.
+            </p>
+
+        {% endif %}
+
+        <p class="text-xs text-slate-400 mt-5">
+            Budget figures are individual participant amounts.
+            Make sure everyone uses the same currency.
+        </p>
+
+    </section>
+
+
+    <!-- AI BUTTON -->
+
+    <div class="bg-white rounded-3xl p-8 shadow-sm mt-6 text-center">
+
+        <h2 class="text-2xl font-bold">
+            Ready to plan your trip?
+        </h2>
+
+        <p class="text-slate-500 mt-3">
+            Generate a recommendation based on everyone's preferences.
+        </p>
+
+        <a
+            href="{% url 'core:ai_output' %}"
+            class="inline-block bg-[#635BFF] text-white rounded-xl px-8 py-4 mt-6 font-semibold"
+        >
+            View AI trip recommendations →
+        </a>
+
+    </div>
 
 </main>
 

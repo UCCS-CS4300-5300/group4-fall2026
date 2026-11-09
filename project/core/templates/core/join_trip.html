@@ -1,0 +1,80 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Join a Trip</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen bg-[#F7F7FB] flex items-center justify-center p-6">
+
+<div class="bg-white rounded-3xl shadow-lg p-10 w-full max-w-lg">
+
+    <h1 class="text-3xl font-bold mb-3">
+        Join a trip
+    </h1>
+
+    <p class="text-slate-500 mb-8">
+        Enter the invitation code shared by your trip organizer.
+    </p>
+
+    {% if error %}
+        <div class="bg-red-100 text-red-700 p-3 rounded-xl mb-5">
+            {{ error }}
+        </div>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <label class="block font-semibold mb-2">
+            Your name
+        </label>
+
+        <input
+            type="text"
+            name="person_name"
+            maxlength="50"
+            required
+            placeholder="Enter your name"
+            class="w-full border rounded-xl p-4 mb-5"
+        >
+
+        <label class="block font-semibold mb-2">
+            Invitation code
+        </label>
+
+        <input
+            type="text"
+            name="invite_code"
+            maxlength="8"
+            required
+            placeholder="e.g. ABC12345"
+            autocomplete="off"
+            class="w-full border rounded-xl p-4 mb-6 uppercase"
+        >
+
+        <button
+            type="submit"
+            class="w-full bg-[#635BFF] text-white rounded-xl p-4 font-semibold"
+        >
+            Join trip
+        </button>
+
+    </form>
+
+    <div class="mt-6 text-center">
+        <a
+            href="{% url 'core:home' %}"
+            class="text-slate-500 hover:underline"
+        >
+            ← Back to home
+        </a>
+    </div>
+
+</div>
+
+</body>
+</html>

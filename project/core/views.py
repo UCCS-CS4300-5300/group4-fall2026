@@ -1,197 +1,560 @@
+
+from decimal import Decimal, InvalidOperation
+
+from django.contrib import messages
+from django.db import transaction
 from django.http import JsonResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import (
+    get_object_or_404,
+    redirect,
+    render,
+)
+from django.utils.dateparse import parse_date
 from django.views.decorators.http import require_GET, require_POST
 
 from . import ai_runner
-from .models import AIRun, StarterItem, Trip
+
+from .models import (
+    AIRun,
+    StarterItem,
+    Trip,
+    User,
+    DateRange,
+)
+
 from .summary import build_group_summary
 
 
+# --------------------------------------------------
+# SESSION HELPERS
+# --------------------------------------------------
+
+ACTIVE_TRIP_KEY = "active_trip_id"
+ACTIVE_USER_KEY = "active_user_id"
+
+
+def active_trip(request):
+    trip_id = request.session.get(ACTIVE_TRIP_KEY)
+
+    if not trip_id:
+        return None
+
+    return Trip.objects.filter(pk=trip_id).first()
+
+
+def active_user(request):
+    trip = active_trip(request)
+
+    user_id = request.session.get(ACTIVE_USER_KEY)
+
+    if trip is None or user_id is None:
+        return None
+
+    # Only return a participant belonging to this trip.
+    return trip.users.filter(pk=user_id).first()
+
+
+def require_participant(request):
+    trip = active_trip(request)
+    user = active_user(request)
+
+    if trip is None or user is None:
+        return None, None
+
+    return trip, user
+
+
+def participant_context(trip, user):
+    return {
+        "trip": trip,
+        "trip_name": trip.name,
+        "person_name": user.name,
+        "invite_code": trip.invite_code,
+        "user": user,
+    }
+
+
+def home_context(error=None):
+    context = {
+        "items": StarterItem.objects.filter(
+            is_active=True
+        ).order_by("title")
+    }
+
+    if error:
+        context["error"] = error
+
+    return context
+
+
+# --------------------------------------------------
+# CREATE TRIP
+# --------------------------------------------------
+
 def home(request):
+
     if request.method == "POST":
-        trip_name = request.POST.get("tripName", "").strip()
-        person_name = request.POST.get("personName", "").strip()
+
+        trip_name = request.POST.get(
+            "tripName", ""
+        ).strip()
+
+        person_name = request.POST.get(
+            "personName", ""
+        ).strip()
 
         if not trip_name or not person_name:
             return render(
                 request,
                 "core/home.html",
-                {"error": "Please enter both your trip name and your name."},
+                home_context(
+                    "Please enter both your trip name and your name."
+                ),
                 status=400,
             )
 
-        request.session["trip_name"] = trip_name
-        request.session["person_name"] = person_name
+        if len(trip_name) > 120 or len(person_name) > 50:
+            return render(
+                request,
+                "core/home.html",
+                home_context("One of the entered names is too long."),
+                status=400,
+            )
+
+        with transaction.atomic():
+
+            trip = Trip.objects.create(
+                name=trip_name
+            )
+
+            user = User.objects.create(
+                name=person_name
+            )
+
+            trip.users.add(user)
+
+        # This browser now belongs to the new trip.
+        request.session.cycle_key()
+
+        request.session[ACTIVE_TRIP_KEY] = trip.id
+        request.session[ACTIVE_USER_KEY] = user.id
 
         return redirect("core:destination")
 
-    items = StarterItem.objects.filter(
-        is_active=True
-    ).order_by("title")
-
-    return render(request, 
-    	"core/home.html", 
-    	{"items": items}
+    return render(
+        request,
+        "core/home.html",
+        home_context()
     )
 
 
-def destination(request):
-    print("DESTINATION VIEW:", request.method)
+# --------------------------------------------------
+# JOIN EXISTING TRIP
+# --------------------------------------------------
+
+def join_trip(request):
 
     if request.method == "POST":
-        destinations = request.POST.getlist("destinations")
-        print("DESTINATIONS RECEIVED:", destinations)
 
-        if not destinations:
-            print("ERROR: NO DESTINATIONS RECEIVED")
+        invite_code = request.POST.get(
+            "invite_code", ""
+        ).strip().upper()
+
+        person_name = request.POST.get(
+            "person_name", ""
+        ).strip()
+
+        if not invite_code or not person_name:
             return render(
                 request,
-                "core/destination.html",
+                "core/join_trip.html",
                 {
-                    "items": StarterItem.objects.filter(
-                        is_active=True
-                    ).order_by("title"),
-                    "trip_name": request.session.get("trip_name", ""),
-                    "person_name": request.session.get("person_name", ""),
-                    "error": "Please add at least one destination.",
+                    "error": "Please enter your name and invitation code."
                 },
                 status=400,
             )
 
-        request.session["trip_destinations"] = destinations
-        print("REDIRECTING TO SCHEDULE")
+        if len(person_name) > 50:
+            return render(
+                request,
+                "core/join_trip.html",
+                {
+                    "error": "Your name must be 50 characters or fewer."
+                },
+                status=400,
+            )
+
+        trip = Trip.objects.filter(
+            invite_code=invite_code
+        ).first()
+
+        if trip is None:
+            return render(
+                request,
+                "core/join_trip.html",
+                {
+                    "error": "Invalid invitation code."
+                },
+                status=400,
+            )
+
+        with transaction.atomic():
+
+            user = User.objects.create(
+                name=person_name
+            )
+
+            trip.users.add(user)
+
+        # Start a fresh participant session.
+        request.session.cycle_key()
+
+        request.session[ACTIVE_TRIP_KEY] = trip.id
+        request.session[ACTIVE_USER_KEY] = user.id
+
+        return redirect("core:destination")
+
+    return render(
+        request,
+        "core/join_trip.html"
+    )
+
+
+# --------------------------------------------------
+# DESTINATIONS
+# --------------------------------------------------
+
+def destination(request):
+
+    trip, user = require_participant(request)
+
+    if trip is None:
+        return redirect("core:home")
+
+    if request.method == "POST":
+
+        destinations = request.POST.getlist(
+            "destinations"
+        )
+
+        # Normalize and remove duplicate entries.
+        normalized = []
+        seen = set()
+
+        for destination_name in destinations:
+
+            name = " ".join(destination_name.split())
+            key = name.casefold()
+
+            if name and key not in seen:
+                normalized.append(name)
+                seen.add(key)
+
+        if not normalized:
+            context = participant_context(trip, user)
+            context["error"] = "Please add at least one destination."
+
+            return render(
+                request,
+                "core/destination.html",
+                context,
+                status=400,
+            )
+
+        user.destinations = normalized
+
+        user.save(
+            update_fields=["destinations"]
+        )
 
         return redirect("core:schedule")
+
+    context = participant_context(trip, user)
+
+    context["existing_destinations"] = user.destinations
 
     return render(
         request,
         "core/destination.html",
-        {
-            "items": StarterItem.objects.filter(
-                is_active=True
-            ).order_by("title"),
-            "trip_name": request.session.get("trip_name", ""),
-            "person_name": request.session.get("person_name", ""),
-        },
+        context
     )
 
 
+# --------------------------------------------------
+# SCHEDULE AND AVAILABILITY
+# --------------------------------------------------
+
 def schedule(request):
+
+    trip, user = require_participant(request)
+
+    if trip is None:
+        return redirect("core:home")
+
     if request.method == "POST":
-        request.session["trip_schedule"] = {
-            "start_date": request.POST.get("start_date", ""),
-            "end_date": request.POST.get("end_date", ""),
-            "pace": request.POST.get("pace", "balanced"),
-            "day_start": request.POST.get("day_start", "09:00"),
-            "day_end": request.POST.get("day_end", "21:00"),
-        }
 
-        return redirect("core:budget")
+        start_value = request.POST.get("start_date", "")
+        end_value = request.POST.get("end_date", "")
 
-    return render(request, "core/schedule.html")
+        start_date = parse_date(start_value)
+        end_date = parse_date(end_value)
 
+        if not start_date or not end_date:
+            context = participant_context(trip, user)
+            context["error"] = "Please enter valid start and end dates."
 
-
-
-def budget(request):
-    if request.method == "POST":
-        budget_amount = request.POST.get("budget_amount", "").strip()
-        currency = request.POST.get("currency", "USD").strip()
-
-        # Validate the budget before saving it.
-        from decimal import Decimal, InvalidOperation
-
-        try:
-            amount = Decimal(budget_amount)
-            if not amount.is_finite() or amount <= 0:
-                raise InvalidOperation
-        except (InvalidOperation, ValueError):
             return render(
                 request,
-                "core/budget.html",
-                {"error": "Please enter a valid budget greater than zero."},
+                "core/schedule.html",
+                context,
                 status=400,
             )
 
-        allowed_currencies = {"USD", "EUR", "GBP", "CAD", "AUD", "JPY"}
+        if end_date < start_date:
+            context = participant_context(trip, user)
+            context["error"] = "The end date must be after the start date."
+
+            return render(
+                request,
+                "core/schedule.html",
+                context,
+                status=400,
+            )
+
+        if (end_date - start_date).days > 365:
+            context = participant_context(trip, user)
+            context["error"] = "Your availability cannot exceed 366 days."
+
+            return render(
+                request,
+                "core/schedule.html",
+                context,
+                status=400,
+            )
+
+        pace = request.POST.get("pace", "balanced")
+
+        if pace not in {"relaxed", "balanced", "packed"}:
+            pace = "balanced"
+
+        day_start = request.POST.get("day_start", "09:00")
+        day_end = request.POST.get("day_end", "21:00")
+
+        # Save the availability for this participant only.
+        with transaction.atomic():
+
+            user.available_ranges.all().delete()
+
+            DateRange.objects.create(
+                user=user,
+                startDate=start_date,
+                endDate=end_date,
+            )
+
+            user.schedule_preferences = {
+                "pace": pace,
+                "day_start": day_start,
+                "day_end": day_end,
+            }
+
+            user.save(
+                update_fields=["schedule_preferences"]
+            )
+
+        return redirect("core:budget")
+
+    context = participant_context(trip, user)
+
+    return render(
+        request,
+        "core/schedule.html",
+        context
+    )
+
+
+# --------------------------------------------------
+# BUDGET
+# --------------------------------------------------
+
+def budget(request):
+
+    trip, user = require_participant(request)
+
+    if trip is None:
+        return redirect("core:home")
+
+    if request.method == "POST":
+
+        budget_amount = request.POST.get(
+            "budget_amount", ""
+        ).strip()
+
+        currency = request.POST.get(
+            "currency", "USD"
+        ).strip().upper()
+
+        try:
+
+            amount = Decimal(budget_amount)
+
+            if (
+                not amount.is_finite()
+                or amount <= 0
+                or amount > Decimal("9999999999.99")
+            ):
+                raise InvalidOperation
+
+        except (InvalidOperation, ValueError):
+
+            context = participant_context(trip, user)
+            context["error"] = "Please enter a valid budget greater than zero."
+
+            return render(
+                request,
+                "core/budget.html",
+                context,
+                status=400,
+            )
+
+        allowed_currencies = {
+            "USD", "EUR", "GBP", "CAD", "AUD", "JPY"
+        }
+
         if currency not in allowed_currencies:
             currency = "USD"
 
-        # Save the budget for the trip-planning step.
-        request.session["trip_budget"] = {
-            "amount": str(amount),
-            "currency": currency,
-        }
+        user.budget = amount
+        user.currency = currency
+
+        user.save(
+            update_fields=["budget", "currency"]
+        )
 
         return redirect("core:activities")
 
-    return render(request, "core/budget.html")
+    context = participant_context(trip, user)
+
+    return render(
+        request,
+        "core/budget.html",
+        context
+    )
 
 
-
+# --------------------------------------------------
+# ACTIVITIES
+# --------------------------------------------------
 
 def activities(request):
-    if request.method == "POST":
-        # Retrieve the selected activity checkboxes.
-        activities = request.POST.getlist("activities")
 
-        # Retrieve the optional text field.
+    trip, user = require_participant(request)
+
+    if trip is None:
+        return redirect("core:home")
+
+    if request.method == "POST":
+
+        selected_activities = request.POST.getlist(
+            "activities"
+        )
+
         additional_notes = request.POST.get(
             "additional_notes", ""
         ).strip()
 
-        # Store the answers for the next step.
-        request.session["trip_activities"] = activities
-        request.session["trip_additional_notes"] = additional_notes
+        if len(additional_notes) > 5000:
+            context = participant_context(trip, user)
+            context["error"] = "Your notes are too long."
 
-        # Continue to the existing summary page for now.
+            return render(
+                request,
+                "core/activities.html",
+                context,
+                status=400,
+            )
+
+        user.activities = list(dict.fromkeys(
+            a.strip()
+            for a in selected_activities
+            if a.strip()
+        ))
+
+        user.additional_notes = additional_notes
+
+        user.save(
+            update_fields=[
+                "activities",
+                "additional_notes",
+            ]
+        )
+
         return redirect("core:summary")
 
-    return render(request, "core/activities.html")
+    context = participant_context(trip, user)
+
+    return render(
+        request,
+        "core/activities.html",
+        context
+    )
 
 
-
-ACTIVE_TRIP_KEY = "active_trip_id"
-
-
-def active_trip(request):
-    """The trip set at login (session key active_trip_id), or None if unset or deleted."""
-    trip_id = request.session.get(ACTIVE_TRIP_KEY)
-    if trip_id is None:
-        return None
-    return Trip.objects.filter(pk=trip_id).first()
-
+# --------------------------------------------------
+# GROUP SUMMARY
+# --------------------------------------------------
 
 def summary(request):
-    trip_data = {
-        "destinations": request.session.get("trip_destinations", []),
-        "schedule": request.session.get("trip_schedule", {}),
-        "budget": request.session.get("trip_budget", {}),
-        "activities": request.session.get("trip_activities", []),
-        "additional_notes": request.session.get(
-            "trip_additional_notes", ""
-        ),
+
+    trip, user = require_participant(request)
+
+    if trip is None:
+        return redirect("core:home")
+
+    members = trip.users.prefetch_related(
+        "available_ranges"
+    )
+
+    group_summary = build_group_summary(members)
+
+    # Additional group-wide information.
+    group_summary["participants"] = trip.users.count()
+
+    group_summary["submitted_preferences"] = {
+        "destinations": trip.users.exclude(
+            destinations=[]
+        ).count(),
+
+        "activities": trip.users.exclude(
+            activities=[]
+        ).count(),
+
+        "budgets": trip.users.filter(
+            budget__isnull=False
+        ).count(),
+
+        "availability": trip.users.filter(
+            available_ranges__isnull=False
+        ).distinct().count(),
     }
 
-    trip = active_trip(request)
-    group_summary = None
-    if trip is not None:
-        # Only this trip's members, with their date ranges fetched in one query.
-        group_summary = build_group_summary(trip.users.prefetch_related("available_ranges"))
+    context = participant_context(trip, user)
+
+    context.update({
+        "summary": group_summary,
+        "members": trip.users.all(),
+    })
 
     return render(
         request,
         "core/summary.html",
-        {
-            "trip": trip,
-            "summary": group_summary,
-            "trip_data": trip_data,
-        },
+        context
     )
 
 
+# --------------------------------------------------
+# AI RESULTS
+# --------------------------------------------------
 
-# The three parts of the AI's answer, in page order: (key, heading, short-box label).
 AI_SECTIONS = [
     ("destination", "Destination", "Suggested destination"),
     ("activities", "Activities", "Suggested activities"),
@@ -200,56 +563,99 @@ AI_SECTIONS = [
 
 
 def ai_results(trip):
-    """
-    The AI's latest results for trip, keyed by section.
 
-    Each value is {"short": ..., "long": ...} (the answer and the AI's
-    explanation), or None if that part hasn't been generated. The destination
-    is an AISuggestion; activities (and budget, once the AI produces it) are
-    saved on the trip's AIRun.
-    """
-    latest = trip.suggestions.order_by("-created_at", "-id").first()
-    run = AIRun.objects.filter(trip=trip).first()
+    latest = trip.suggestions.order_by(
+        "-created_at", "-id"
+    ).first()
+
+    run = AIRun.objects.filter(
+        trip=trip
+    ).first()
+
     extra = run.results if run else {}
+
     return {
-        "destination": {"short": latest.location, "long": latest.description} if latest else None,
+        "destination": {
+            "short": latest.location,
+            "long": latest.description,
+        } if latest else None,
+
         "activities": extra.get("activities"),
+
         "budget": extra.get("budget"),
     }
 
 
 def ai_output(request):
-    """Shows the active trip's AI suggestions. Only reads saved results; never calls the model."""
-    trip = active_trip(request)
-    sections = []
-    if trip is not None:
-        results = ai_results(trip)
-        sections = [
-            {"key": key, "title": title, "short_label": label, "result": results[key]}
-            for key, title, label in AI_SECTIONS
-        ]
-    return render(request, "core/ai_output.html", {"trip": trip, "sections": sections})
+
+    trip, user = require_participant(request)
+
+    if trip is None:
+        return redirect("core:home")
+
+    results = ai_results(trip)
+
+    sections = [
+        {
+            "key": key,
+            "title": title,
+            "short_label": label,
+            "result": results[key],
+        }
+        for key, title, label in AI_SECTIONS
+    ]
+
+    context = participant_context(trip, user)
+
+    context["sections"] = sections
+
+    return render(
+        request,
+        "core/ai_output.html",
+        context
+    )
 
 
+# --------------------------------------------------
+# AI RUNNING
+# --------------------------------------------------
 
-
-def _no_trip():
-    return JsonResponse({"status": "no_trip", "error": "No trip selected."}, status=400)
+def no_trip():
+    return JsonResponse(
+        {
+            "status": "no_trip",
+            "error": "No trip selected."
+        },
+        status=400,
+    )
 
 
 @require_POST
 def ai_run(request):
-    """Start the active trip's AI in the background if its answers changed. Returns JSON state."""
-    trip = active_trip(request)
+
+    trip, user = require_participant(request)
+
     if trip is None:
-        return _no_trip()
-    return JsonResponse(ai_runner.start(trip, retry=request.POST.get("retry") == "1"))
+        return no_trip()
+
+    # The AI receives the whole trip, not just the
+    # preferences of the current participant.
+    return JsonResponse(
+        ai_runner.start(
+            trip,
+            retry=request.POST.get("retry") == "1"
+        )
+    )
 
 
 @require_GET
 def ai_status(request):
-    """The active trip's AI state as JSON, for pages that are waiting on a run."""
-    trip = active_trip(request)
+
+    trip, user = require_participant(request)
+
     if trip is None:
-        return _no_trip()
-    return JsonResponse(ai_runner.state(trip))
+        return no_trip()
+
+    return JsonResponse(
+        ai_runner.state(trip)
+    )
