@@ -153,6 +153,11 @@ def home(request):
 # --------------------------------------------------
 
 def join_trip(request):
+    """
+    Join a trip with its invitation code. A shared link (/join/?code=ABC12345)
+    fills the code in. Joining again with the same name (any capitalization)
+    continues as that member instead of adding a duplicate.
+    """
 
     if request.method == "POST":
 
@@ -164,47 +169,44 @@ def join_trip(request):
             "person_name", ""
         ).strip()
 
-        if not invite_code or not person_name:
+        def error(message):
+            # Keep what was typed so the person only fixes the mistake.
             return render(
                 request,
                 "core/join_trip.html",
                 {
-                    "error": "Please enter your name and invitation code."
+                    "error": message,
+                    "invite_code": invite_code,
+                    "person_name": person_name,
                 },
                 status=400,
             )
 
+        if not invite_code or not person_name:
+            return error("Please enter your name and invitation code.")
+
         if len(person_name) > 50:
-            return render(
-                request,
-                "core/join_trip.html",
-                {
-                    "error": "Your name must be 50 characters or fewer."
-                },
-                status=400,
-            )
+            return error("Your name must be 50 characters or fewer.")
 
         trip = Trip.objects.filter(
             invite_code=invite_code
         ).first()
 
         if trip is None:
-            return render(
-                request,
-                "core/join_trip.html",
-                {
-                    "error": "Invalid invitation code."
-                },
-                status=400,
-            )
+            return error("Invalid invitation code.")
 
         with transaction.atomic():
 
-            user = User.objects.create(
-                name=person_name
-            )
+            user = trip.users.filter(
+                name__iexact=person_name
+            ).order_by("pk").first()
 
-            trip.users.add(user)
+            if user is None:
+                user = User.objects.create(
+                    name=person_name
+                )
+
+                trip.users.add(user)
 
         # Start a fresh participant session.
         request.session.cycle_key()
@@ -216,7 +218,10 @@ def join_trip(request):
 
     return render(
         request,
-        "core/join_trip.html"
+        "core/join_trip.html",
+        {
+            "invite_code": request.GET.get("code", "").strip().upper()[:8],
+        },
     )
 
 

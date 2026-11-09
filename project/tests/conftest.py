@@ -66,3 +66,18 @@ def trip_with_users(db, trip_model, user_model, users_of):
         user.add_available_date_range(DATE_1, DATE_2)
         users_of(trip).add(user)
     return trip
+
+@pytest.fixture
+def log_in(client):
+    """
+    log_in(trip, user) signs the test client in as user on trip, the way the
+    create and join pages do. Pages that need a participant redirect to the
+    start page without it.
+    """
+    def _log_in(trip, user):
+        session = client.session
+        session["active_trip_id"] = trip.pk
+        session["active_user_id"] = user.pk
+        session.save()
+
+    return _log_in

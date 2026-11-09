@@ -46,12 +46,23 @@
                     {{ trip.invite_code }}
                 </span>
 
-                <button
-                    onclick="navigator.clipboard.writeText('{{ trip.invite_code }}')"
-                    class="bg-white border rounded-lg px-4 py-2"
-                >
-                    Copy
-                </button>
+                <div class="flex gap-2">
+                    <button
+                        type="button"
+                        onclick="navigator.clipboard.writeText('{{ trip.invite_code }}').then(() => { this.textContent = 'Copied!'; })"
+                        class="bg-white border rounded-lg px-4 py-2"
+                    >
+                        Copy code
+                    </button>
+                    <button
+                        type="button"
+                        data-link="{% url 'core:join_trip' %}?code={{ trip.invite_code }}"
+                        onclick="navigator.clipboard.writeText(location.origin + this.dataset.link).then(() => { this.textContent = 'Link copied!'; })"
+                        class="bg-white border rounded-lg px-4 py-2"
+                    >
+                        Copy invite link
+                    </button>
+                </div>
 
             </div>
 
@@ -295,8 +306,12 @@
         </h2>
 
         <p class="text-slate-500 mt-3">
-            Generate a recommendation based on everyone's preferences.
+            The AI starts on your group's plan as soon as this page loads.
         </p>
+
+        <div class="mt-4 flex justify-center">
+            {% include "core/_ai_progress.html" %}
+        </div>
 
         <a
             href="{% url 'core:ai_output' %}"

@@ -39,13 +39,23 @@
                     {{ invite_code }}
                 </span>
 
-                <button
-                    type="button"
-                    onclick="navigator.clipboard.writeText('{{ invite_code }}')"
-                    class="bg-white border rounded-lg px-4 py-2 text-sm font-semibold"
-                >
-                    Copy code
-                </button>
+                <div class="flex gap-2">
+                    <button
+                        type="button"
+                        onclick="navigator.clipboard.writeText('{{ invite_code }}').then(() => { this.textContent = 'Copied!'; })"
+                        class="bg-white border rounded-lg px-4 py-2 text-sm font-semibold"
+                    >
+                        Copy code
+                    </button>
+                    <button
+                        type="button"
+                        data-link="{% url 'core:join_trip' %}?code={{ invite_code }}"
+                        onclick="navigator.clipboard.writeText(location.origin + this.dataset.link).then(() => { this.textContent = 'Link copied!'; })"
+                        class="bg-white border rounded-lg px-4 py-2 text-sm font-semibold"
+                    >
+                        Copy invite link
+                    </button>
+                </div>
 
             </div>
 

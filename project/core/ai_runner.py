@@ -2,7 +2,8 @@
 Runs a trip's AI in the background so no page waits on the model.
 
 One run asks for the destination (Trip.AIDest), then activities for that
-destination (Trip.AIGetAct). A run starts only when the trip's answers have
+destination (Trip.AIGetAct), then a budget check for that plan
+(Trip.AIGetBudget). A run starts only when the trip's answers have
 changed since the last one, so the slow model is called as few times as
 possible. Pages start a run and then poll its state.
 """
@@ -127,6 +128,30 @@ def _explanation(raw):
     return text or raw.replace("**", "").strip()
 
 
+def _budget_short(amount):
+    """'1450' -> '$1,450 estimated total'; anything unparseable is shown as the AI wrote it."""
+    try:
+        return f"${float(amount):,.0f} estimated total"
+    except (TypeError, ValueError):
+        return str(amount).strip()
+
+
+def _budget_result(trip, location, activities):
+    """
+    The AI's budget check for the plan, or None when no one gave a budget.
+    A failure here is logged and skipped, so it never discards the
+    destination and activities already generated.
+    """
+    if trip.get_avg_budget() == "IGNORE":
+        return None
+    try:
+        budget = trip.AIGetBudget(AIParser(), location, activities)
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        log.warning("Budget step for trip %s failed: %r", trip.pk, exc)
+        return None
+    return {"short": _budget_short(budget["Budget"]), "long": _explanation(budget["Raw"])}
+
+
 def run_ai(run_id):
     """Call the AI for the run's trip and save what it returns. Never raises."""
     run = AIRun.objects.select_related("trip").get(pk=run_id)
@@ -143,11 +168,18 @@ def run_ai(run_id):
             acts = trip.AIGetAct(AIParser(), location)
         except ValueError:
             acts = None  # no member listed any activities, so there is nothing to suggest
+        activities = []
         if acts:
+            activities = [a.strip() for a in acts["Activities"] if a.strip()]
             results["activities"] = {
-                "short": ", ".join(a.strip() for a in acts["Activities"] if a.strip()),
+                "short": ", ".join(activities),
                 "long": _explanation(acts["Raw"]),
             }
+
+        budget = _budget_result(trip, location, activities)
+        if budget:
+            results["budget"] = budget
+
         run.results = results
         run.status = AIRun.DONE
     except Exception as exc:  # pylint: disable=broad-exception-caught

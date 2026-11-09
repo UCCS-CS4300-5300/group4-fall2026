@@ -28,9 +28,13 @@
 
     </div>
 
+    <div class="mt-6">
+        {% include "core/_ai_progress.html" with reload=True %}
+    </div>
+
     {% for section in sections %}
 
-        <section class="bg-white rounded-3xl p-8 shadow-sm mt-6">
+        <section id="ai-{{ section.key }}" class="bg-white rounded-3xl p-8 shadow-sm mt-6">
 
             <h2 class="text-2xl font-bold mb-5">
                 {{ section.title }}
@@ -64,20 +68,6 @@
 
     <div class="mt-8 text-center">
 
-        <button
-            id="generateButton"
-            onclick="generatePlan()"
-            class="bg-[#635BFF] text-white rounded-xl px-8 py-4 font-semibold"
-        >
-            Generate trip plan
-        </button>
-
-        <p id="status" class="text-slate-500 mt-4"></p>
-
-    </div>
-
-    <div class="mt-8 text-center">
-
         <a
             href="{% url 'core:summary' %}"
             class="text-[#635BFF] font-semibold"
@@ -89,103 +79,6 @@
 
 </main>
 
-<script>
-
-async function generatePlan() {
-
-    const button = document.getElementById("generateButton");
-    const status = document.getElementById("status");
-
-    button.disabled = true;
-    button.textContent = "Starting...";
-    status.textContent = "Preparing your group's trip plan...";
-
-    try {
-
-        const response = await fetch(
-            "{% url 'core:ai_run' %}",
-            {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": "{{ csrf_token }}",
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
-                body: ""
-            }
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error || "Could not start AI.");
-        }
-
-        status.textContent = "AI planning has started.";
-
-        checkStatus();
-
-    } catch (error) {
-
-        status.textContent = error.message;
-
-        button.disabled = false;
-        button.textContent = "Try again";
-
-    }
-
-}
-
-async function checkStatus() {
-
-    const status = document.getElementById("status");
-    const button = document.getElementById("generateButton");
-
-    try {
-
-        const response = await fetch(
-            "{% url 'core:ai_status' %}"
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error || "Could not retrieve AI status.");
-        }
-
-        status.textContent = data.status || "AI is working...";
-
-        if (
-            data.status === "completed" ||
-            data.status === "complete" ||
-            data.status === "success"
-        ) {
-            window.location.reload();
-            return;
-        }
-
-        if (
-            data.status === "failed" ||
-            data.status === "error"
-        ) {
-            button.disabled = false;
-            button.textContent = "Try again";
-            return;
-        }
-
-        setTimeout(checkStatus, 3000);
-
-    } catch (error) {
-
-        status.textContent = error.message;
-
-        button.disabled = false;
-        button.textContent = "Try again";
-
-    }
-
-}
-
-</script>
 
 </body>
 </html>
