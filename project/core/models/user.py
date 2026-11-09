@@ -51,6 +51,10 @@ class User(models.Model):
             self.activities.remove(activity)
             self.save(update_fields=["activities"])
 
+    def setBudget(self, budgetIn):
+        self.budget = budgetIn
+        self.save(update_fields=["budget"])
+
 
 class DateRange(models.Model):
     """A class for storing ranges of available dates for trips."""

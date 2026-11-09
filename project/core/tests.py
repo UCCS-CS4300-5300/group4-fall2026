@@ -157,6 +157,8 @@ def test_destination_prompt(monkeypatch):
    user2 = User.objects.create(name="Bob")
    user.add_destination("Los Angeles, California")
    user2.add_destination("Los Angeles, California")
+   user.setBudget(1000)
+   user2.setBudget(2000)
    parser = AIParser.objects.create()
    trip.add_user(user)
    trip.add_user(user2)
@@ -215,5 +217,33 @@ def test_empty_activity_suggestions_rejected():
 @pytest.mark.django_db
 def test_no_passed_parser_rejected():
    trip = Trip.objects.create(name="Winter break")
-   with pytest.raises(ValueError): trip.AIDest()
+   with pytest.raises(TypeError): trip.AIDest()
    with pytest.raises(ValueError): trip.AIGetAct("Colorado Springs, USA")
+
+@pytest.mark.django_db
+def test_user_budget_update():
+   trip = Trip.objects.create(name="Winter break")
+   user = User.objects.create(name="Quentin")
+   user.setBudget(1000)
+   trip.add_user(user)
+   returnAtt = trip.get_user_data(user, "budget")
+   assert returnAtt == 1000
+
+@pytest.mark.django_db
+def test_budget_prompt():
+   trip = Trip.objects.create(name="Winter break")
+   parser = AIParser.objects.create()
+   user = User.objects.create(name="Quentin")
+   user2 = User.objects.create(name="Bob")
+   user.add_destination("Los Angeles, California")
+   user2.add_destination("Los Angeles, California")
+   user.add_activity("Mountain Biking")
+   user2.add_activity("Mountain Biking")
+   user2.add_activity("Art Museum")
+   user2.add_activity("Concert")
+   user.setBudget(1000)
+   user2.setBudget(2000)
+   trip.add_user(user)
+   trip.add_user(user2)
+   outBudget = trip.AIGetBudget(parser, "Colorado Springs, USA", ["Hiking", "Skiing", "Shopping"], 1500)
+   assert "$1,500" in outBudget["Raw"]

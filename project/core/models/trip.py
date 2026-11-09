@@ -1,4 +1,5 @@
 from django.db import models
+from .AILocation import AIParser
 
 class Trip(models.Model):
     name = models.CharField(max_length=120)
@@ -43,9 +44,28 @@ class Trip(models.Model):
             raise ValueError(f"Invalid user field: {field_name}")
         return getattr(user, field_name)
 
-    def AIDest(self, parser=None):
+    def get_avg_budget(self):
+        budgetList = []
+        for i in self.users.all():
+            userBudget = self.get_user_data(i, "budget")
+            if userBudget == None:
+                continue
+            budgetList.append(float(userBudget))
+        total = 0
+        for i in budgetList:
+            total += i
+        if len(budgetList)>0:
+            avg = total/len(budgetList)
+            return avg
+        else:
+            return "IGNORE"
+
+    def AIDest(self, parser:AIParser):
+        if not isinstance(parser, AIParser):
+            raise ValueError("AI Parser is of wrong type")
         if parser == None:
             raise ValueError("No AI parser passed")
+        #Get the destination suggestions of the group
         dest = []
         for i in self.users.all():
             userDestList = self.get_user_data(i, "destinations")
@@ -53,21 +73,52 @@ class Trip(models.Model):
                 dest.append(j)
         if dest==[]:
             raise ValueError("No destination suggestions")
-        return parser.giveLocation(dest)
+        #Get the budget of the group
+        travelBudget = self.get_avg_budget()
+        if travelBudget != "IGNORE":
+            travelBudget *= .6
+        return parser.giveLocation(dest, travelBudget)
 
-    def AIGetAct(self, parser=None, inDest=None):
-            if parser == None:
-                raise ValueError("No AI parser passed")
-            if inDest == None:
+    def AIGetAct(self, parser:AIParser, inDest=None):
+        if not isinstance(parser, AIParser):
+            raise ValueError("AI Parser is of wrong type")
+        if parser == None:
+            raise ValueError("No AI parser passed")
+        if inDest == None:
+            if parser.location != "":
+                inDest = parser.location
+            else:
                 raise ValueError("No input destination passed")
-            act = []
-            for i in self.users.all():
-                userActList = self.get_user_data(i, "activities")
-                for j in userActList:
-                    act.append(j)
-            if act==[]:
-                raise ValueError("No activity suggestions")
-            return parser.giveActivities(inDest, act)
+        act = []
+        for i in self.users.all():
+            userActList = self.get_user_data(i, "activities")
+            for j in userActList:
+                act.append(j)
+        if act==[]:
+            raise ValueError("No activity suggestions")
+        actBudget = self.get_avg_budget()
+        if actBudget != "IGNORE":
+            actBudget *= .6
+        return parser.giveActivities(inDest, act, actBudget)
+
+    def AIGetBudget(self, parser:AIParser, inDest=None, inAct=None, inBudget=None):
+        if not isinstance(parser, AIParser):
+            raise ValueError("AI Parser is of wrong type")
+        if parser == None:
+            raise ValueError("No AI parser passed")
+        if inDest == None:
+            if parser.location != "":
+                inDest = parser.location
+            else:
+                raise ValueError("No input destination passed")
+        if inAct == None:
+            if parser.activities != []:
+                inAct = parser.activities
+            else:
+                raise ValueError("No activities passed")
+        if inBudget == None:
+            inBudget = self.get_avg_budget()
+        return parser.giveBudget(inDest, inAct, inBudget)
 
     def _require_user(self, user):
         if user.pk is None or not self.users.filter(pk=user.pk).exists():
