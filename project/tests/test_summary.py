@@ -152,126 +152,128 @@ def test_outliers_not_flagged_in_tiny_groups():
 
 # ---- The page ---------------------------------------------------------------
 
-def activate(client, trip):
-    """Make trip the active trip in client's session, as login does."""
-    session = client.session
-    session["active_trip_id"] = trip.pk
-    session.save()
+@pytest.fixture
+def trip(db):
+    return Trip.objects.create(name="Winter break")
 
 
 @pytest.fixture
-def trip(client):
-    """A trip that is already the active trip for the test client."""
-    trip = Trip.objects.create(name="Winter break")
-    activate(client, trip)
-    return trip
+def view(client, log_in):
+    """view(trip) loads the summary page as the trip's first member."""
+    def _view(trip, as_user=None):
+        log_in(trip, as_user or trip.users.order_by("pk").first())
+        return client.get(reverse("core:summary"))
+
+    return _view
 
 
-def page(client):
-    return client.get(reverse("core:summary")).content.decode()
+def text(response):
+    return response.content.decode()
 
 
-@pytest.mark.django_db
-def test_summary_page_shows_combined_preferences(client, trip):
+def test_summary_page_shows_combined_preferences(trip, view):
     make("Quentin", ["Austin"], [(day(17), day(22))], "500", ["Hiking"], trip=trip)
     make("Rosalind", ["Austin", "Miami"], [(day(18), day(20))], "700", ["Beach"], trip=trip)
     make("Thaddeus", ["Austin"], [(day(19), day(19))], "650", ["Hiking"], trip=trip)
-    r = client.get(reverse("core:summary"))
-    html = r.content.decode()
+    r = view(trip)
+    html = text(r)
     assert r.status_code == 200
     assert "Winter break" in html
-    assert "3 members have submitted" in html
-    for text in ["Austin", "Miami", "Hiking", "Beach", "Sat, Dec 19, 2026", "$500 – $700"]:
-        assert text in html, text
+    assert "3 / 3 people" in html  # everyone listed Austin
+    for value in ["Austin", "Miami", "Hiking", "Beach", "Dec 19, 2026", "500.00", "700.00"]:
+        assert value in html, value
 
 
-@pytest.mark.django_db
-def test_summary_page_only_counts_the_active_trips_members(client, trip):
+def test_summary_page_only_counts_the_active_trips_members(trip, view):
     make("Quentin", ["Austin"], budget="500", trip=trip)
     other = Trip.objects.create(name="Spring break")
     make("Rosalind", ["Miami"], budget="9000", trip=other)
     make("Thaddeus", ["Chicago"])  # in no trip at all
-    html = page(client)
-    assert "1 member has submitted" in html
+    html = text(view(trip))
+    assert "1 / 1 people" in html
     assert "Austin" in html
     assert "Miami" not in html and "Chicago" not in html and "9000" not in html
 
 
-@pytest.mark.django_db
-def test_switching_active_trip_switches_the_summary(client, trip):
+def test_switching_active_trip_switches_the_summary(trip, view):
     make("Quentin", ["Austin"], trip=trip)
     other = Trip.objects.create(name="Spring break")
     make("Rosalind", ["Miami"], trip=other)
-    activate(client, other)
-    html = page(client)
+    html = text(view(other))
     assert "Spring break" in html and "Miami" in html and "Austin" not in html
 
 
-@pytest.mark.django_db
-def test_summary_page_never_shows_names(client, trip):
+def test_summary_page_never_shows_names(trip, view):
     make("Quentin", ["Austin"], [(day(18), day(20))], "500", ["Hiking"], trip=trip)
     make("Rosalind", ["Miami"], [(day(19), day(22))], "900", ["Beach"], trip=trip)
-    html = page(client)
+    html = text(view(trip))
     assert "Quentin" not in html and "Rosalind" not in html
 
 
-@pytest.mark.django_db
-def test_common_range_shown_as_a_span(client, trip):
+def test_common_range_shown_as_a_span(trip, view):
     make("Quentin", ranges=[(day(18), day(22))], trip=trip)
     make("Rosalind", ranges=[(day(19), day(21))], trip=trip)
-    assert "Dec 19 – Dec 21, 2026 (3 days)" in page(client)
+    html = text(view(trip))
+    assert "Dec 19, 2026" in html and "Dec 21, 2026" in html and "3 days" in html
 
 
-@pytest.mark.django_db
-def test_summary_page_query_count_does_not_grow_with_members(client, trip, django_assert_max_num_queries):
-    for i in range(10):
+def test_summary_page_query_count_does_not_grow_with_members(trip, client, log_in):
+    from django.db import connection
+    from django.test.utils import CaptureQueriesContext
+
+    def queries_for_page():
+        with CaptureQueriesContext(connection) as ctx:
+            client.get(reverse("core:summary"))
+        return len(ctx.captured_queries)
+
+    first = make("Member0", ["Austin"], [(day(18), day(20))], "500", trip=trip)
+    make("Member1", ["Austin"], [(day(18), day(20))], "500", trip=trip)
+    log_in(trip, first)
+    few = queries_for_page()
+    for i in range(2, 12):
         make(f"Member{i}", ["Austin"], [(day(18), day(20))], "500", trip=trip)
-    # session, trip, members, date ranges
-    with django_assert_max_num_queries(4):
-        client.get(reverse("core:summary"))
+    assert queries_for_page() == few
 
 
-@pytest.mark.django_db
-def test_trip_with_no_members_shows_empty_state(client, trip):
+def test_member_with_no_answers_yet_sees_empty_sections(trip, view):
+    make("Quentin", trip=trip)
+    html = text(view(trip))
+    assert "No destinations submitted yet." in html
+    assert "No budgets submitted yet." in html
+
+
+def test_without_signing_in_the_page_redirects_to_the_start(db, client):
+    make("Quentin", ["Austin"])
     r = client.get(reverse("core:summary"))
-    html = r.content.decode()
-    assert r.status_code == 200
-    assert "No submissions yet" in html
-    assert "See AI suggestions" not in html
+    assert r.status_code == 302 and r.url == reverse("core:home")
 
 
-@pytest.mark.django_db
-def test_without_an_active_trip_the_page_asks_to_start_or_join_one(client):
-    make("Quentin", ["Austin"])  # data exists, but no trip is active
-    r = client.get(reverse("core:summary"))
-    html = r.content.decode()
-    assert r.status_code == 200
-    assert "No trip selected" in html
-    assert f'href="{reverse("core:home")}"' in html
-    assert "Austin" not in html
-
-
-@pytest.mark.django_db
-def test_a_deleted_active_trip_is_treated_as_no_trip(client, trip):
+def test_a_member_of_another_trip_is_redirected(trip, view):
     make("Quentin", ["Austin"], trip=trip)
+    outsider = make("Rosalind", ["Miami"], trip=Trip.objects.create(name="Spring break"))
+    r = view(trip, as_user=outsider)
+    assert r.status_code == 302 and r.url == reverse("core:home")
+
+
+def test_a_deleted_active_trip_redirects_to_the_start(trip, view, client):
+    make("Quentin", ["Austin"], trip=trip)
+    view(trip)
     trip.delete()
-    html = page(client)
-    assert "No trip selected" in html and "Austin" not in html
+    r = client.get(reverse("core:summary"))
+    assert r.status_code == 302 and r.url == reverse("core:home")
 
 
-@pytest.mark.django_db
-def test_summary_page_links_to_ai_suggestions(client, trip):
+def test_summary_page_links_to_ai_and_starts_it(trip, view):
     make("Quentin", ["Austin"], trip=trip)
-    html = page(client)
-    assert "See AI suggestions" in html
+    html = text(view(trip))
     assert f'href="{reverse("core:ai_output")}"' in html
+    assert reverse("core:ai_run") in html  # the progress indicator starts the AI
 
 
-@pytest.mark.django_db
-def test_summary_page_updates_when_a_member_edits(client, trip):
+def test_summary_page_updates_when_a_member_edits(trip, view):
     member = make("Quentin", ["Austin"], trip=trip)
-    assert "Austin" in page(client)
+    assert "Austin" in text(view(trip))
     member.remove_destination("Austin")
     member.add_destination("Portland")
-    html = page(client)
+    html = text(view(trip))
     assert "Portland" in html and "Austin" not in html
