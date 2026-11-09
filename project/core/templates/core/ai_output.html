@@ -1,116 +1,191 @@
+
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Trip Planner - AI Suggestions</title>
-
-    <!-- Tailwind -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI Trip Recommendations</title>
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        purple: "#635BFF",
-                        ink: "#18181B"
-                    },
-                    boxShadow: {
-                        soft: "0 10px 30px rgba(0,0,0,0.06)"
-                    }
-                }
-            }
-        }
-    </script>
 </head>
 
+<body class="min-h-screen bg-[#F7F7FB] p-6">
 
-<body class="min-h-screen bg-[#F7F7FB] text-ink">
+<main class="max-w-4xl mx-auto">
 
-<main class="max-w-[1040px] mx-auto px-5 sm:px-12 py-14">
+    <div class="bg-white rounded-3xl p-8 shadow-sm">
 
-        <!-- Reads saved AI results for the active trip only. It never calls the AI itself. -->
-
-    <div class="max-w-[760px]">
-
-        <div class="inline-flex items-center gap-2 rounded-full bg-purple/10
-                    text-purple px-3 py-1.5 text-xs font-bold mb-5">
-            AI SUGGESTIONS
-        </div>
-
-        <h1 class="text-4xl sm:text-5xl font-bold tracking-[-.04em] leading-tight">
-            Your trip plan
+        <h1 class="text-3xl font-bold">
+            Your group's trip plan
         </h1>
 
-        {% if trip %}
-            <p class="mt-4 text-lg text-slate-500 leading-8">
-                <strong class="text-ink">{{ trip.name }}</strong> ·
-                Suggestions based on everyone's combined answers.
-            </p>
-        {% endif %}
+        <p class="text-slate-500 mt-3">
+            {{ trip.name }}
+        </p>
+
+        <p class="text-sm text-slate-500 mt-2">
+            Based on the group's combined preferences.
+        </p>
 
     </div>
 
+    {% for section in sections %}
 
-    {% if not trip %}
+        <section class="bg-white rounded-3xl p-8 shadow-sm mt-6">
 
-        <div class="mt-10 bg-white rounded-[28px] shadow-soft border border-slate-100 p-10 text-center">
-            <p class="text-xl font-semibold">No trip selected</p>
-            <p class="mt-2 text-slate-500">
-                Start or join a trip by its name to see its AI suggestions.
-            </p>
-            <a href="{% url 'core:home' %}"
-               class="inline-block mt-6 px-7 py-3 rounded-xl bg-slate-900 text-white
-                      text-sm font-semibold hover:bg-slate-800 transition">
-                Start or join a trip →
-            </a>
-        </div>
+            <h2 class="text-2xl font-bold mb-5">
+                {{ section.title }}
+            </h2>
 
-    {% else %}
+            {% if section.result %}
 
-        <div class="mt-8">
-            {% include "core/_ai_progress.html" with reload=True %}
-        </div>
+                <p class="text-sm text-[#635BFF] font-semibold">
+                    {{ section.short_label }}
+                </p>
 
-        <div class="mt-6 space-y-6">
-            {% for section in sections %}
-                <section id="ai-{{ section.key }}"
-                         class="bg-white rounded-[28px] shadow-soft border border-slate-100 p-8"
-                         aria-labelledby="ai-{{ section.key }}-heading">
+                <h3 class="text-xl font-bold mt-2">
+                    {{ section.result.short }}
+                </h3>
 
-                    <h2 id="ai-{{ section.key }}-heading" class="text-xl font-bold">{{ section.title }}</h2>
+                <div class="text-slate-600 mt-4 whitespace-pre-line">
+                    {{ section.result.long }}
+                </div>
 
-                    {% if section.result %}
-                        <!-- Short box: the answer itself -->
-                        <p class="mt-5 text-xs font-semibold text-slate-500">{{ section.short_label|upper }}</p>
-                        <div class="mt-2 rounded-2xl bg-slate-50 border border-slate-200 px-5 py-4
-                                    text-lg font-semibold">{{ section.result.short }}</div>
+            {% else %}
 
-                        <!-- Long box: the AI's explanation -->
-                        <p class="mt-5 text-xs font-semibold text-slate-500">WHY THE AI CHOSE THIS</p>
-                        <div class="mt-2 rounded-2xl bg-slate-50 border border-slate-200 px-5 py-4
-                                    text-slate-600 leading-7 whitespace-pre-line">{{ section.result.long }}</div>
-                    {% else %}
-                        <p class="mt-5 text-slate-500">Not generated yet.</p>
-                    {% endif %}
+                <p class="text-slate-400">
+                    This recommendation has not been generated yet.
+                </p>
 
-                </section>
-            {% endfor %}
-        </div>
+            {% endif %}
 
-    {% endif %}
-    
-    <div class="mt-8">
-        <a href="{% url 'core:summary' %}"
-           class="px-5 py-3 rounded-xl text-sm font-semibold text-slate-500 hover:bg-slate-100">
+        </section>
+
+    {% endfor %}
+
+    <div class="mt-8 text-center">
+
+        <button
+            id="generateButton"
+            onclick="generatePlan()"
+            class="bg-[#635BFF] text-white rounded-xl px-8 py-4 font-semibold"
+        >
+            Generate trip plan
+        </button>
+
+        <p id="status" class="text-slate-500 mt-4"></p>
+
+    </div>
+
+    <div class="mt-8 text-center">
+
+        <a
+            href="{% url 'core:summary' %}"
+            class="text-[#635BFF] font-semibold"
+        >
             ← Back to group summary
         </a>
+
     </div>
 
 </main>
+
+<script>
+
+async function generatePlan() {
+
+    const button = document.getElementById("generateButton");
+    const status = document.getElementById("status");
+
+    button.disabled = true;
+    button.textContent = "Starting...";
+    status.textContent = "Preparing your group's trip plan...";
+
+    try {
+
+        const response = await fetch(
+            "{% url 'core:ai_run' %}",
+            {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: ""
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Could not start AI.");
+        }
+
+        status.textContent = "AI planning has started.";
+
+        checkStatus();
+
+    } catch (error) {
+
+        status.textContent = error.message;
+
+        button.disabled = false;
+        button.textContent = "Try again";
+
+    }
+
+}
+
+async function checkStatus() {
+
+    const status = document.getElementById("status");
+    const button = document.getElementById("generateButton");
+
+    try {
+
+        const response = await fetch(
+            "{% url 'core:ai_status' %}"
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Could not retrieve AI status.");
+        }
+
+        status.textContent = data.status || "AI is working...";
+
+        if (
+            data.status === "completed" ||
+            data.status === "complete" ||
+            data.status === "success"
+        ) {
+            window.location.reload();
+            return;
+        }
+
+        if (
+            data.status === "failed" ||
+            data.status === "error"
+        ) {
+            button.disabled = false;
+            button.textContent = "Try again";
+            return;
+        }
+
+        setTimeout(checkStatus, 3000);
+
+    } catch (error) {
+
+        status.textContent = error.message;
+
+        button.disabled = false;
+        button.textContent = "Try again";
+
+    }
+
+}
+
+</script>
 
 </body>
 </html>
