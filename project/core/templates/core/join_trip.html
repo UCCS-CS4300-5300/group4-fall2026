@@ -18,6 +18,7 @@
 
     <p class="text-slate-500 mb-8">
         Enter the invitation code shared by your trip organizer.
+        Already joined? Enter the same name to pick up where you left off.
     </p>
 
     {% if error %}
@@ -36,6 +37,7 @@
         <input
             type="text"
             name="person_name"
+            value="{{ person_name|default:'' }}"
             maxlength="50"
             required
             placeholder="Enter your name"
@@ -49,6 +51,7 @@
         <input
             type="text"
             name="invite_code"
+            value="{{ invite_code|default:'' }}"
             maxlength="8"
             required
             placeholder="e.g. ABC12345"
