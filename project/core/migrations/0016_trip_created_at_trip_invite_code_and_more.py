@@ -6,6 +6,19 @@ import django.utils.timezone
 from django.db import migrations, models
 
 
+def give_existing_trips_invite_codes(apps, schema_editor):
+    """Give every trip created before this migration its own invite code."""
+    Trip = apps.get_model('core', 'Trip')
+    used = set(Trip.objects.exclude(invite_code=None).values_list('invite_code', flat=True))
+    for trip in Trip.objects.filter(invite_code=None):
+        code = core.models.trip.generate_invite_code()
+        while code in used:
+            code = core.models.trip.generate_invite_code()
+        used.add(code)
+        trip.invite_code = code
+        trip.save(update_fields=['invite_code'])
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -19,7 +32,16 @@ class Migration(migrations.Migration):
             field=models.DateTimeField(auto_now_add=True, default=django.utils.timezone.now),
             preserve_default=False,
         ),
+        # invite_code is added in three steps. Adding a unique field with a
+        # callable default in one step gives every existing trip the SAME code,
+        # which fails on any database that already has two or more trips.
         migrations.AddField(
+            model_name='trip',
+            name='invite_code',
+            field=models.CharField(editable=False, max_length=8, null=True),
+        ),
+        migrations.RunPython(give_existing_trips_invite_codes, migrations.RunPython.noop),
+        migrations.AlterField(
             model_name='trip',
             name='invite_code',
             field=models.CharField(default=core.models.trip.generate_invite_code, editable=False, max_length=8, unique=True),
