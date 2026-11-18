@@ -2,3 +2,6 @@ Django>=5.1,<5.3
 pytest>=8,<9
 pytest-django>=4.8,<5
 ollama
+# Imported by config/settings.py, so needed everywhere (local, CI, Render).
+dj-database-url>=2.2,<4
+whitenoise>=6.7,<7

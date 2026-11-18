@@ -1,0 +1,4 @@
+# Render only: the app's dependencies plus the PostgreSQL driver and web server.
+-r requirements.txt
+psycopg[binary]>=3.2,<4
+gunicorn==23.0.0
