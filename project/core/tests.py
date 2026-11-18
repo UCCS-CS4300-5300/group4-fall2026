@@ -38,6 +38,12 @@ def test_user_name_set():
     assert user.name == "Jeremiah"
 
 @pytest.mark.django_db
+def test_user_starting_location_set():
+    user = User.objects.create(name = "Jeremiah")
+    user.set_starting_location("Taumata­whakatangihanga­koauau­o­tamatea­turi­pukaka­piki­maunga­horo­nuku­pokai­whenua­ki­tana­tahu") # This is a real place in New Zealand.
+    assert user.startingLocation == "Taumata­whakatangihanga­koauau­o­tamatea­turi­pukaka­piki­maunga­horo­nuku­pokai­whenua­ki­tana­tahu"
+
+@pytest.mark.django_db
 def test_user_add_destinations():
     user = User.objects.create(name = "Jeremiah")
     user.add_destination("Arizona")
