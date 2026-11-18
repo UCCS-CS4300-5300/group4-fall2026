@@ -1,0 +1,2 @@
+# Shell scripts run on Linux (Render, CI): keep LF line endings on every OS.
+*.sh text eol=lf
