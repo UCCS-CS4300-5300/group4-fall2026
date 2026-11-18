@@ -22,6 +22,11 @@ class User(models.Model):
         default=list
     )
 
+    startingLocation = models.CharField(
+        max_length=100,
+        default="Unknown"
+    )
+
     budget = models.DecimalField(
         null=True,
         blank=True,
@@ -93,6 +98,10 @@ class User(models.Model):
     def setBudget(self, budgetIn):
         self.budget = budgetIn
         self.save(update_fields=["budget"])
+
+    def set_starting_location(self, location):
+        self.startingLocation = location
+        self.save(update_fields=["startingLocation"])
 
     def __str__(self):
         return self.name
