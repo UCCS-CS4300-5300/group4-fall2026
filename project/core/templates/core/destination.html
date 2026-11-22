@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -15,18 +14,15 @@
 
     <div class="mb-8">
 
-        <p class="text-sm font-bold text-[#635BFF]">
-            YOUR TRIP
-        </p>
+        <p class="text-sm font-bold text-[#635BFF]">YOUR TRIP</p>
 
-        <h1 class="text-3xl font-bold mt-2">
-            {{ trip_name }}
-        </h1>
+        <h1 class="text-3xl font-bold mt-2">{{ trip_name }}</h1>
 
         <p class="text-slate-500 mt-2">
             Planning as {{ person_name }}
         </p>
 
+        <!-- Invite Friends -->
         <div class="bg-purple-50 border border-purple-100 rounded-xl p-4 mt-5">
 
             <p class="text-sm text-slate-600">
@@ -40,29 +36,73 @@
                 </span>
 
                 <div class="flex gap-2">
+
                     <button
                         type="button"
                         onclick="navigator.clipboard.writeText('{{ invite_code }}').then(() => { this.textContent = 'Copied!'; })"
-                        class="bg-white border rounded-lg px-4 py-2 text-sm font-semibold"
-                    >
+                        class="bg-white border rounded-lg px-4 py-2 text-sm font-semibold">
                         Copy code
                     </button>
+
                     <button
                         type="button"
                         data-link="{% url 'core:join_trip' %}?code={{ invite_code }}"
                         onclick="navigator.clipboard.writeText(location.origin + this.dataset.link).then(() => { this.textContent = 'Link copied!'; })"
-                        class="bg-white border rounded-lg px-4 py-2 text-sm font-semibold"
-                    >
+                        class="bg-white border rounded-lg px-4 py-2 text-sm font-semibold">
                         Copy invite link
                     </button>
+
                 </div>
 
             </div>
 
         </div>
 
+        <!-- Starting Location -->
+        <div class="bg-white border rounded-2xl p-5 mt-5">
+
+            <h2 class="text-lg font-bold">
+                📍 Where are you starting from?
+            </h2>
+
+            <p class="text-sm text-slate-500 mt-1">
+                Enter your starting city so we can help plan your trip.
+            </p>
+
+            <div class="flex gap-2 mt-4">
+
+                <input
+                    type="text"
+                    name="starting_location"
+                    id="startingLocation"
+                    placeholder="e.g. Colorado Springs, Denver, New York"
+                    value="{{ starting_location|default:'' }}"
+                    required
+                    form="destinationForm"
+                    maxlength="150"
+                    class="w-full border border-slate-300 rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-[#635BFF] transition"
+                >
+
+                <button
+                    type="button"
+                    id="saveStartingBtn"
+                    class="bg-[#635BFF] text-white px-5 rounded-xl font-semibold whitespace-nowrap disabled:opacity-50">
+                    Save
+                </button>
+
+            </div>
+
+            <p id="startingLocationError"
+               class="text-red-500 text-sm mt-2 hidden"></p>
+
+            <p id="startingLocationSuccess"
+               class="text-green-600 text-sm mt-2 hidden"></p>
+
+        </div>
+
     </div>
 
+    <!-- Destinations -->
     <div class="bg-white rounded-3xl shadow-sm border p-8">
 
         <h2 class="text-3xl font-bold">
@@ -86,34 +126,34 @@
                     id="destinationInput"
                     type="text"
                     placeholder="e.g. Tokyo, Denver, Paris"
-                    class="flex-1 border rounded-xl p-4"
+                    maxlength="150"
+                    class="flex-1 border rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-[#635BFF]"
                 >
 
                 <button
                     type="button"
                     id="addBtn"
-                    class="bg-[#635BFF] text-white px-6 rounded-xl font-semibold"
-                >
+                    class="bg-[#635BFF] text-white px-6 rounded-xl font-semibold disabled:opacity-50">
                     Add
                 </button>
 
             </div>
 
+            <p id="destinationError"
+               class="text-red-500 text-sm mt-2 hidden"></p>
+
             <h3 class="font-bold mt-8 mb-4">
                 Your destinations
             </h3>
 
-            <div
-                id="destinations"
-                class="grid grid-cols-1 sm:grid-cols-2 gap-3"
-            ></div>
+            <div id="destinations"
+                 class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            </div>
 
             <div id="hiddenDestinations"></div>
 
-            <p
-                id="empty"
-                class="text-center text-slate-400 py-8"
-            >
+            <p id="empty"
+               class="text-center text-slate-400 py-8">
                 Your destinations will appear here.
             </p>
 
@@ -121,8 +161,8 @@
 
                 <button
                     type="submit"
-                    class="bg-slate-900 text-white px-8 py-3 rounded-xl font-semibold"
-                >
+                    id="submitBtn"
+                    class="bg-slate-900 text-white px-8 py-3 rounded-xl font-semibold disabled:opacity-50">
                     Continue →
                 </button>
 
@@ -138,6 +178,10 @@
 
 <script>
 
+// =====================================
+// ELEMENTS
+// =====================================
+
 const input = document.getElementById("destinationInput");
 const addBtn = document.getElementById("addBtn");
 const container = document.getElementById("destinations");
@@ -145,40 +189,430 @@ const empty = document.getElementById("empty");
 const hidden = document.getElementById("hiddenDestinations");
 const form = document.getElementById("destinationForm");
 
+const startingInput = document.getElementById("startingLocation");
+const saveStartingBtn = document.getElementById("saveStartingBtn");
+
+const destinationError = document.getElementById("destinationError");
+const startingError = document.getElementById("startingLocationError");
+const startingSuccess = document.getElementById("startingLocationSuccess");
+
+const submitBtn = document.getElementById("submitBtn");
+
 let destinations = JSON.parse(
     document.getElementById("existing-destinations").textContent
 );
 
-function addDestination() {
+let submitting = false;
+let startingLocationVerified = false;
+
+
+// =====================================
+// NORMALIZE LOCATION
+// =====================================
+
+function normalizeLocation(value) {
+
+    return value
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[.,]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+
+}
+
+
+// =====================================
+// LOCATION VALIDATION
+// Uses exact Nominatim matches
+// =====================================
+
+async function validateLocation(location) {
+
+    location = location.trim();
+
+    if (!location || location.length < 2 || location.length > 150) {
+        return false;
+    }
+
+    const search = normalizeLocation(location);
+
+    try {
+
+        const url =
+            "https://nominatim.openstreetmap.org/search?" +
+            new URLSearchParams({
+                q: location,
+                format: "jsonv2",
+                addressdetails: "1",
+                limit: "10"
+            });
+
+        const response = await fetch(url, {
+            headers: {
+                "Accept": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error("Location service unavailable.");
+        }
+
+        const results = await response.json();
+
+        if (!Array.isArray(results) || results.length === 0) {
+            return false;
+        }
+
+        // Only accept exact matches to a recognized place name.
+        const valid = results.some(place => {
+
+            const address = place.address || {};
+
+            const possibleNames = [
+                place.name,
+                address.city,
+                address.town,
+                address.village,
+                address.municipality,
+                address.county,
+                address.state,
+                address.country
+            ];
+
+            const exactMatch = possibleNames.some(name => {
+
+                if (!name) return false;
+
+                return normalizeLocation(name) === search;
+
+            });
+
+            if (!exactMatch) return false;
+
+            // Restrict results to geographic locations.
+            const validTypes = [
+                "city",
+                "town",
+                "village",
+                "municipality",
+                "administrative",
+                "county",
+                "state",
+                "country",
+                "locality",
+                "hamlet"
+            ];
+
+            const validClasses = [
+                "place",
+                "boundary"
+            ];
+
+            return (
+                validTypes.includes(place.type) ||
+                validClasses.includes(place.class)
+            );
+
+        });
+
+        console.log(
+            "Location validation:",
+            location,
+            valid ? "VALID" : "INVALID"
+        );
+
+        return valid;
+
+    } catch (error) {
+
+        console.error("Location validation error:", error);
+
+        throw new Error(
+            "Unable to verify location. Please try again."
+        );
+
+    }
+
+}
+
+
+// =====================================
+// ERROR HANDLING
+// =====================================
+
+function showError(element, message) {
+
+    element.textContent = message;
+    element.classList.remove("hidden");
+
+}
+
+function clearError(element) {
+
+    element.textContent = "";
+    element.classList.add("hidden");
+
+}
+
+
+// =====================================
+// STARTING LOCATION UI
+// =====================================
+
+function resetStartingLocation() {
+
+    startingLocationVerified = false;
+
+    startingInput.classList.remove(
+        "border-green-500",
+        "border-red-500",
+        "ring-2",
+        "ring-green-200"
+    );
+
+    startingInput.classList.add("border-slate-300");
+
+    startingSuccess.classList.add("hidden");
+
+}
+
+
+function markStartingLocationVerified() {
+
+    startingLocationVerified = true;
+
+    startingInput.classList.remove(
+        "border-slate-300",
+        "border-red-500"
+    );
+
+    startingInput.classList.add(
+        "border-green-500",
+        "ring-2",
+        "ring-green-200"
+    );
+
+    startingSuccess.textContent =
+        "✓ Starting location saved successfully!";
+
+    startingSuccess.classList.remove("hidden");
+
+}
+
+
+// =====================================
+// SAVE STARTING LOCATION
+// NO PAGE RELOAD
+// =====================================
+
+async function saveStartingLocation() {
+
+    const startingLocation = startingInput.value.trim();
+
+    clearError(startingError);
+
+    if (!startingLocation) {
+
+        resetStartingLocation();
+        startingInput.classList.add("border-red-500");
+
+        showError(
+            startingError,
+            "Please enter your starting location."
+        );
+
+        return false;
+    }
+
+    if (startingLocation.length < 2 || startingLocation.length > 150) {
+
+        resetStartingLocation();
+        startingInput.classList.add("border-red-500");
+
+        showError(
+            startingError,
+            "Please enter a valid starting location."
+        );
+
+        return false;
+    }
+
+    saveStartingBtn.disabled = true;
+    saveStartingBtn.textContent = "Checking...";
+
+    try {
+
+        const valid = await validateLocation(startingLocation);
+
+        if (!valid) {
+
+            resetStartingLocation();
+            startingInput.classList.add("border-red-500");
+
+            showError(
+                startingError,
+                "We couldn't find this exact location. Please check the spelling."
+            );
+
+            return false;
+        }
+
+        markStartingLocationVerified();
+
+        return true;
+
+    } catch (error) {
+
+        resetStartingLocation();
+        startingInput.classList.add("border-red-500");
+
+        showError(
+            startingError,
+            error.message
+        );
+
+        return false;
+
+    } finally {
+
+        saveStartingBtn.disabled = false;
+        saveStartingBtn.textContent = "Save";
+
+    }
+
+}
+
+
+// =====================================
+// STARTING LOCATION EVENTS
+// =====================================
+
+saveStartingBtn.addEventListener("click", saveStartingLocation);
+
+startingInput.addEventListener("keydown", event => {
+
+    if (event.key === "Enter") {
+
+        event.preventDefault();
+
+        saveStartingLocation();
+
+    }
+
+});
+
+startingInput.addEventListener("input", () => {
+
+    resetStartingLocation();
+    clearError(startingError);
+
+});
+
+
+// =====================================
+// ADD DESTINATION
+// =====================================
+
+async function addDestination() {
 
     const value = input.value.trim();
 
-    if (!value) return;
+    clearError(destinationError);
 
-    const exists = destinations.some(
-        d => d.toLowerCase() === value.toLowerCase()
-    );
+    if (!value) {
 
-    if (exists) {
-        input.value = "";
+        showError(
+            destinationError,
+            "Please enter a destination."
+        );
+
         return;
     }
 
-    destinations.push(value);
+    if (value.length < 2 || value.length > 150) {
 
-    input.value = "";
+        showError(
+            destinationError,
+            "Please enter a location between 2 and 150 characters."
+        );
 
-    render();
+        return;
+    }
 
-    input.focus();
+    const exists = destinations.some(
+        d => normalizeLocation(d) === normalizeLocation(value)
+    );
+
+    if (exists) {
+
+        showError(
+            destinationError,
+            "This destination has already been added."
+        );
+
+        return;
+    }
+
+    addBtn.disabled = true;
+    addBtn.textContent = "Checking...";
+
+    try {
+
+        const valid = await validateLocation(value);
+
+        if (!valid) {
+
+            showError(
+                destinationError,
+                "We couldn't find this exact location. Please check the spelling."
+            );
+
+            return;
+        }
+
+        destinations.push(value);
+
+        input.value = "";
+
+        render();
+
+        input.focus();
+
+    } catch (error) {
+
+        showError(
+            destinationError,
+            error.message
+        );
+
+    } finally {
+
+        addBtn.disabled = false;
+        addBtn.textContent = "Add";
+
+    }
+
 }
+
+
+// =====================================
+// REMOVE DESTINATION
+// =====================================
 
 function removeDestination(index) {
 
     destinations.splice(index, 1);
 
     render();
+
 }
+
+
+// =====================================
+// RENDER DESTINATIONS
+// =====================================
 
 function render() {
 
@@ -229,29 +663,193 @@ function render() {
 
 }
 
+
+// =====================================
+// DESTINATION EVENTS
+// =====================================
+
 addBtn.addEventListener("click", addDestination);
 
 input.addEventListener("keydown", event => {
 
     if (event.key === "Enter") {
+
         event.preventDefault();
+
         addDestination();
+
     }
 
 });
 
-form.addEventListener("submit", event => {
+input.addEventListener("input", () => {
 
-    if (destinations.length === 0) {
+    clearError(destinationError);
 
-        event.preventDefault();
+});
 
-        alert("Please add at least one destination.");
+
+// =====================================
+// FORM SUBMISSION
+// =====================================
+
+form.addEventListener("submit", async event => {
+
+    if (submitting) return;
+
+    event.preventDefault();
+
+    clearError(startingError);
+    clearError(destinationError);
+
+    const startingLocation = startingInput.value.trim();
+
+    if (!startingLocation) {
+
+        showError(
+            startingError,
+            "Please enter your starting location."
+        );
+
+        startingInput.focus();
 
         return;
     }
 
+    if (destinations.length === 0) {
+
+        showError(
+            destinationError,
+            "Please add at least one destination."
+        );
+
+        input.focus();
+
+        return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Validating locations...";
+
+    try {
+
+        // Verify starting location if necessary
+        if (
+            !startingLocationVerified ||
+            startingInput.dataset.verifiedValue !== startingLocation
+        ) {
+
+            const validStartingLocation =
+                await saveStartingLocation();
+
+            if (!validStartingLocation) {
+
+                startingInput.focus();
+
+                return;
+            }
+
+        }
+
+        // Verify all destinations again
+        for (const destination of destinations) {
+
+            const valid = await validateLocation(destination);
+
+            if (!valid) {
+
+                showError(
+                    destinationError,
+                    `"${destination}" could not be verified. Please remove it or correct its spelling.`
+                );
+
+                return;
+            }
+
+        }
+
+        // Include starting location in Django POST
+        submitting = true;
+
+        submitBtn.textContent = "Saving your trip...";
+
+        form.submit();
+
+    } catch (error) {
+
+        showError(
+            startingError,
+            error.message || "Unable to validate location. Please try again."
+        );
+
+    } finally {
+
+        if (!submitting) {
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Continue →";
+
+        }
+
+    }
+
 });
+
+
+// =====================================
+// SAVE VERIFIED INPUT VALUE
+// =====================================
+
+const originalMarkVerified = markStartingLocationVerified;
+
+function markStartingLocationVerifiedWithValue() {
+
+    originalMarkVerified();
+
+    startingInput.dataset.verifiedValue =
+        startingInput.value.trim();
+
+}
+
+// Update verification handler
+markStartingLocationVerified = markStartingLocationVerifiedWithValue;
+
+
+// =====================================
+// RESTORE EXISTING STARTING LOCATION
+// =====================================
+
+{% if starting_location %}
+
+const savedStartingLocation = startingInput.value.trim();
+
+if (savedStartingLocation) {
+
+    startingInput.classList.remove("border-slate-300");
+
+    startingInput.classList.add(
+        "border-green-500",
+        "ring-2",
+        "ring-green-200"
+    );
+
+    startingSuccess.textContent =
+        "✓ Your starting location (" +
+        savedStartingLocation +
+        ") has been saved successfully!";
+
+    startingSuccess.classList.remove("hidden");
+
+    startingLocationVerified = false;
+
+}
+
+{% endif %}
+
+
+// =====================================
+// INITIAL RENDER
+// =====================================
 
 render();
 
