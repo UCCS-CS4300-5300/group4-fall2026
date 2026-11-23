@@ -5,6 +5,7 @@
 import ollama
 from django.conf import settings
 from django.db import models
+from ollama import Client
 
 class AIParser(models.Model):
     #Parameters are created as empty strings on startup so the data fields can still be referenced in views
@@ -35,9 +36,15 @@ class AIParser(models.Model):
             user_msg += f"\nThe travel budget for the trip is {budget}"
         else:
             user_msg += "This trip has no travel budget"
+
+        #Build the API caller
+        client = Client(
+            host='https://ollama.com',
+            headers={"Authorization": "Bearer f4b3992eccf240c49e9d425390ade878.29D-gFw--98m4VMgermk7r-R"}
+        )
         
         #Prompt the model and record the output
-        resp = ollama.chat(
+        resp = client.chat(
             model = "llama3.1:latest",
             messages=[
             {"role": "system", "content": system_msg},
@@ -75,8 +82,14 @@ class AIParser(models.Model):
         else:
             user_msg += "This trip has no activity budget"
 
+        #Build the API caller
+        client = Client(
+            host='https://ollama.com',
+            headers={"Authorization": "Bearer f4b3992eccf240c49e9d425390ade878.29D-gFw--98m4VMgermk7r-R"}
+        )
+
         #Prompt the model and record the output
-        resp = ollama.chat(
+        resp = client.chat(
             model = "llama3.1:latest",
             messages=[
             {"role": "system", "content": system_msg},
@@ -114,8 +127,14 @@ class AIParser(models.Model):
                 user_msg += "and "
         user_msg += f"falls into our proposed budget of {targetBudget}."
 
+        #Build the API caller
+        client = Client(
+            host='https://ollama.com',
+            headers={"Authorization": "Bearer f4b3992eccf240c49e9d425390ade878.29D-gFw--98m4VMgermk7r-R"}
+        )
+
         #Prompt the model and record the output
-        resp = ollama.chat(
+        resp = client.chat(
             model = "llama3.1:latest",
             messages=[
             {"role": "system", "content": system_msg},
