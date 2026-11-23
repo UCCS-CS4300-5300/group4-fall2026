@@ -2,6 +2,8 @@
 #Ollama can be installed at https://ollama.com/download/windows
 #The model can be downloaded via command prompt with the command "ollama pull llama3.1:latest" (remove the quotes when actually run)
 
+import os
+
 import ollama
 from ollama import Client
 
@@ -28,7 +30,7 @@ for i in destIn:
 #Build the API caller
 client = Client(
     host='https://ollama.com',
-    headers={"Authorization": "Bearer f4b3992eccf240c49e9d425390ade878.29D-gFw--98m4VMgermk7r-R"}
+    headers={"Authorization": "Bearer " + os.environ["OLLAMA_API_KEY"]}  # set it in your terminal; never in code
 )
 
 #Prompt the model and record the output
