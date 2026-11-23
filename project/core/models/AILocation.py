@@ -1,4 +1,7 @@
-#The system depends on the ollama app and the llama 3.1 model being installed
+#The model comes from settings.AI_MODEL (env OLLAMA_MODEL; default llama3.1:latest, a local Ollama model).
+#On Render, OLLAMA_HOST=https://ollama.com and OLLAMA_API_KEY point ollama.chat at Ollama Cloud;
+#the ollama package reads both itself. Never put the API key in code.
+#Locally the system depends on the ollama app and the llama 3.1 model being installed
 #Ollama can be installed at https://ollama.com/download/windows
 #The model can be downloaded via command prompt with the command "ollama pull llama3.1:latest" (remove the quotes when actually run)
 
@@ -35,10 +38,11 @@ class AIParser(models.Model):
             user_msg += f"\nThe travel budget for the trip is {budget}"
         else:
             user_msg += "This trip has no travel budget"
+
         
         #Prompt the model and record the output
         resp = ollama.chat(
-            model = "llama3.1:latest",
+            model = settings.AI_MODEL,
             messages=[
             {"role": "system", "content": system_msg},
             {"role": "user", "content": user_msg},
@@ -75,9 +79,10 @@ class AIParser(models.Model):
         else:
             user_msg += "This trip has no activity budget"
 
+
         #Prompt the model and record the output
         resp = ollama.chat(
-            model = "llama3.1:latest",
+            model = settings.AI_MODEL,
             messages=[
             {"role": "system", "content": system_msg},
             {"role": "user", "content": user_msg},
@@ -114,9 +119,10 @@ class AIParser(models.Model):
                 user_msg += "and "
         user_msg += f"falls into our proposed budget of {targetBudget}."
 
+
         #Prompt the model and record the output
         resp = ollama.chat(
-            model = "llama3.1:latest",
+            model = settings.AI_MODEL,
             messages=[
             {"role": "system", "content": system_msg},
             {"role": "user", "content": user_msg},

@@ -77,6 +77,10 @@ STORAGES = {
 }
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# The AI model. Locally: llama3.1 in the Ollama app. On Render: a cloud model,
+# with OLLAMA_HOST=https://ollama.com and OLLAMA_API_KEY set there (never in code).
+AI_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.1:latest")
+
 if not DEBUG:
     # Gunicorn doesn't serve static files (the admin's CSS); WhiteNoise does,
     # from STATIC_ROOT, which build.sh fills with collectstatic.

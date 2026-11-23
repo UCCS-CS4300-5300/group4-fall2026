@@ -64,7 +64,7 @@ It checks `/healthz/` (database reachable, deployed commit), creates a trip, ans
 `https://<app>.onrender.com/healthz/` alone returns `{"status": "ok", "commit": "<sha>", "database": "ok"}`, or HTTP 503 if the database can't be reached.
 
 ## Known limitations
-- **No AI on Render.** Render Free has no Ollama server or GPU, so the deployed AI section shows "AI unavailable". To use a reachable Ollama server instead, set `OLLAMA_HOST` on Render.
+- **AI on Render uses Ollama Cloud.** Set `OLLAMA_HOST=https://ollama.com`, `OLLAMA_API_KEY` (Render only, never in code) and `OLLAMA_MODEL` on Render. If the account has no credits or the service is down, the AI section shows "AI unavailable" with Try again, and the rest of the app keeps working.
 - **Free-tier sleep.** Render Free stops the service when idle; the first request after that can take about a minute.
 - **No passwords.** Anyone with a trip's invite code can join it, and rejoining with an existing member's name continues as that member.
 

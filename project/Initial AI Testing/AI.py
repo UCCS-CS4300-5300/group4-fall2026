@@ -2,7 +2,10 @@
 #Ollama can be installed at https://ollama.com/download/windows
 #The model can be downloaded via command prompt with the command "ollama pull llama3.1:latest" (remove the quotes when actually run)
 
+import os
+
 import ollama
+from ollama import Client
 
 #Define the parameters of the system's behavior
 destIn = ["Tampa, Florida, USA", "Colorado Springs, Colorado, USA", "San Diego, California, USA", "Cambridge, Massachusetts, USA", "Toronto, Ontario, Canada", "Seoul, South Korea"]
@@ -24,9 +27,15 @@ for i in destIn:
     user_msg += "\n"
     user_msg += i
 
+#Build the API caller
+client = Client(
+    host='https://ollama.com',
+    headers={"Authorization": "Bearer " + os.environ["OLLAMA_API_KEY"]}  # set it in your terminal; never in code
+)
+
 #Prompt the model and record the output
-resp = ollama.chat(
-    model = "llama3.1:latest",
+resp = client.chat(
+    model = "glm-5.3-flash:cloud",
     messages=[
     {"role": "system", "content": system_msg},
     {"role": "user", "content": user_msg},

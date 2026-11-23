@@ -169,3 +169,44 @@ def test_healthz_returns_503_when_the_database_is_down(client, monkeypatch):
 @pytest.mark.django_db
 def test_healthz_only_accepts_get(client):
     assert client.post(reverse("healthz")).status_code == 405
+
+
+# ---- AI model and key (Ollama locally, Ollama Cloud on Render) ---------------
+
+def test_ai_model_defaults_to_local_llama_and_follows_ollama_model():
+    code = "from django.conf import settings\nprint(settings.AI_MODEL)"
+    assert run_django(code, {}).stdout.strip() == "llama3.1:latest"
+    assert run_django(code, {"OLLAMA_MODEL": "glm-5.3-flash"}).stdout.strip() == "glm-5.3-flash"
+
+
+@pytest.mark.django_db
+def test_ai_calls_use_the_configured_model(settings, monkeypatch):
+    import ollama
+
+    from core.models import AIParser, Trip, User
+
+    used = []
+
+    def fake_chat(model, messages):
+        used.append(model)
+        return {"message": {"content": "**Denver, Colorado, USA**\nGood fit."}}
+
+    settings.AI_MODEL = "cloud-model-x"
+    monkeypatch.setattr(ollama, "chat", fake_chat)
+    trip = Trip.objects.create(name="Model check")
+    trip.add_user(User.objects.create(name="Ann", destinations=["Denver"]))
+    trip.AIDest(AIParser())
+    assert used == ["cloud-model-x"]
+
+
+def test_no_api_key_is_written_in_the_source():
+    """Keys belong in Render's environment variables, never in the repository."""
+    import re
+
+    token = re.compile(r"Bearer [A-Za-z0-9._-]{20,}")
+    offenders = [
+        str(path.relative_to(PROJECT))
+        for path in PROJECT.rglob("*.py")
+        if ".venv" not in path.parts and token.search(path.read_text(errors="ignore"))
+    ]
+    assert offenders == []

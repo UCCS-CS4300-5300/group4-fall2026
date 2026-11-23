@@ -1,0 +1,17 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run Django app",
+			"type": "shell",
+			"command": "/home/codespace/.python/current/bin/python",
+			"args": [
+				"project/manage.py",
+				"runserver",
+				"127.0.0.1:8000"
+			],
+			"isBackground": true,
+			"problemMatcher": []
+		}
+	]
+}

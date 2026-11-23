@@ -31,6 +31,7 @@ from .summary import build_group_summary
 
 ACTIVE_TRIP_KEY = "active_trip_id"
 ACTIVE_USER_KEY = "active_user_id"
+MAX_TRIP_USERS = 25
 
 
 def active_trip(request):
@@ -202,6 +203,9 @@ def join_trip(request):
             ).order_by("pk").first()
 
             if user is None:
+                if trip.users.count() >= MAX_TRIP_USERS:
+                    return error("This trip is full.")
+
                 user = User.objects.create(
                     name=person_name
                 )
