@@ -45,7 +45,7 @@ class AIParser(models.Model):
         
         #Prompt the model and record the output
         resp = client.chat(
-            model = "llama3.1:latest",
+            model = "glm-5.3-flash:cloud",
             messages=[
             {"role": "system", "content": system_msg},
             {"role": "user", "content": user_msg},
@@ -90,7 +90,7 @@ class AIParser(models.Model):
 
         #Prompt the model and record the output
         resp = client.chat(
-            model = "llama3.1:latest",
+            model = "glm-5.3-flash:cloud",
             messages=[
             {"role": "system", "content": system_msg},
             {"role": "user", "content": user_msg},
@@ -135,7 +135,7 @@ class AIParser(models.Model):
 
         #Prompt the model and record the output
         resp = client.chat(
-            model = "llama3.1:latest",
+            model = "glm-5.3-flash:cloud",
             messages=[
             {"role": "system", "content": system_msg},
             {"role": "user", "content": user_msg},
